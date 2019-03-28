@@ -23,15 +23,15 @@ void CACHE::llc_prefetcher_initialize()
 //    conf[cpu].on_chip_size = 16384;  //64K
 //    conf[cpu].on_chip_size = 32768;  //128KB
 //    conf[cpu].on_chip_size = 65536;  //256KB
-    conf[cpu].on_chip_size = 131072; //512KB
-//    conf[cpu].on_chip_size = 262144; //1MB
+//    conf[cpu].on_chip_size = 131072; //512KB
+    conf[cpu].on_chip_size = 262144; //1MB
 //    conf[cpu].on_chip_size = 524288;  //2MB
     conf[cpu].on_chip_assoc = 8;
 //    conf[cpu].on_chip_assoc = 524288;
     conf[cpu].training_unit_size = 10000000;
 //    conf[cpu].repl = TABLEISB_REPL_LRU;
-//    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
-    conf[cpu].repl = TABLEISB_REPL_PERFECT;
+    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
+//    conf[cpu].repl = TABLEISB_REPL_PERFECT;
 
     data[cpu].set_conf(&conf[cpu]);
 }
