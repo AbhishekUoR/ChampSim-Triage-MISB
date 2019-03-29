@@ -62,7 +62,6 @@ void TableISB::train(uint64_t pc, uint64_t addr, bool cache_hit)
                 }
             } else {
                 on_chip_data.increase_confidence(prev_addr);
-            //    on_chip_data.update(prev_addr, addr, pc, true);
             }
         }
     } else {
