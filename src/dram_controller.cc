@@ -217,9 +217,9 @@ void MEMORY_CONTROLLER::schedule(PACKET_QUEUE *queue)
     if (oldest_index != -1) { // scheduler might not find anything if all requests are already scheduled or all banks are busy
 
         uint64_t LATENCY = 0;
-        if (row_buffer_hit)  
-            LATENCY = tCAS;
-        else 
+        //if (row_buffer_hit)  
+        //    LATENCY = tCAS;
+        //else 
             LATENCY = tRP + tRCD + tCAS;
 
         uint64_t op_addr = queue->entry[oldest_index].address;
