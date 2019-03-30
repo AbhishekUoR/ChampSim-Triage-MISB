@@ -101,6 +101,10 @@ int TableISBOnchip::decrease_confidence(uint64_t addr)
 
 void TableISBOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl)
 {
+    assoc = repl->get_assoc();
+    if (assoc == 0) {
+        return;
+    }
     uint64_t set_id = get_set_id(prev_addr);
     debug_cout << hex << "update prev_addr: " << prev_addr
         << ", next_addr: " << next_addr
@@ -117,8 +121,8 @@ void TableISBOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc,
         if(update_repl)
             repl->addEntry(set_id, tag, pc);
     } else {
-        if (repl_type != TABLEISB_REPL_PERFECT && entry_map.size() >= assoc) {
-            assert(entry_map.size() == assoc);
+        while (repl_type != TABLEISB_REPL_PERFECT && entry_map.size() >= assoc) {
+//            assert(entry_map.size() == assoc);
             uint64_t victim_addr = repl->pickVictim(set_id);
             entry_map.erase(victim_addr);
         }
@@ -134,6 +138,10 @@ void TableISBOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc,
 bool TableISBOnchip::get_next_addr(uint64_t prev_addr, uint64_t &next_addr,
         uint64_t pc, bool update_stats)
 {
+    assoc = repl->get_assoc();
+    if (assoc == 0) {
+        return false;
+    }
     uint64_t set_id = get_set_id(prev_addr);
     assert(set_id < num_sets);
     uint64_t line_offset = get_line_offset(prev_addr);
@@ -151,6 +159,11 @@ bool TableISBOnchip::get_next_addr(uint64_t prev_addr, uint64_t &next_addr,
     } else {
         return false;
     }
+}
+
+uint32_t TableISBOnchip::get_assoc()
+{
+    return repl->get_assoc();
 }
 
 void TableISBOnchip::print_stats()

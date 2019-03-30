@@ -113,6 +113,11 @@ void TableISB::calculatePrefetch(uint64_t pc, uint64_t addr,
     }
 }
 
+uint32_t TableISB::get_assoc()
+{
+    return on_chip_data.get_assoc();
+}
+
 void TableISB::print_stats()
 {
     cout << dec << "trigger_count=" << trigger_count <<endl;

@@ -44,6 +44,7 @@ class TableISBRepl {
         virtual void addEntry(uint64_t set_id, uint64_t addr, uint64_t pc) = 0;
         virtual uint64_t pickVictim(uint64_t set_id) = 0;
         virtual void print_stats() {}
+        virtual uint32_t get_assoc() { return 8; }
 
         static TableISBRepl* create_repl(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list,
                 TableISBReplType type, uint64_t assoc);
@@ -57,21 +58,32 @@ class TableISBReplLRU : public TableISBRepl
         uint64_t pickVictim(uint64_t set_id);
 };
 
+// Two sampled optgen: assoc of 4 and 8.
+// Three choiese: 0, 4, and 8
+#define HAWKEYE_SAMPLE_ASSOC_COUNT 2
+#define HAWKEYE_EPOCH_LENGTH 1000
+extern unsigned hawkeye_sample_assoc[];
 class TableISBReplHawkeye : public TableISBRepl
 {
     unsigned max_rrpv;
     std::vector<uint64_t> optgen_mytimer;
-    std::vector<OPTgen> optgen;
+//    std::vector<OPTgen> optgen;
+    unsigned dynamic_optgen_choice;
+    std::vector<std::vector<OPTgen> > sample_optgen;
     std::map<uint64_t, ADDR_INFO> optgen_addr_history;
     std::map<uint64_t, uint64_t> signatures;
     std::map<uint64_t, uint32_t> hawkeye_pc_ps_hit_predictions;
     std::map<uint64_t, uint32_t> hawkeye_pc_ps_total_predictions;
     IsbHawkeyePCPredictor predictor;
+    uint64_t last_access_count, curr_access_count;
+
+    void choose_optgen();
 
     public:
         TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list, uint64_t assoc);
         void addEntry(uint64_t set_id, uint64_t addr, uint64_t pc);
         uint64_t pickVictim(uint64_t set_id);
+        uint32_t get_assoc();
 
         void print_stats();
 };
@@ -104,6 +116,7 @@ class TableISBOnchip {
         int decrease_confidence(uint64_t addr);
 
         void print_stats();
+        uint32_t get_assoc();
 };
 
 #endif // __TABLEISB_ONCHIP_H__

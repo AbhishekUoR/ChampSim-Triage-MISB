@@ -20,8 +20,10 @@ uint32_t CACHE::lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const 
 {
     uint32_t way = 0;
 
+//    if (NAME == "LLC")
+//        cout << "current_assoc: " << current_assoc << endl;
     // fill invalid line first
-    for (way=0; way<NUM_WAY; way++) {
+    for (way=0; way<current_assoc; way++) {
         if (block[set][way].valid == false) {
 
             DP ( if (warmup_complete[cpu]) {
@@ -34,9 +36,9 @@ uint32_t CACHE::lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const 
     }
 
     // LRU victim
-    if (way == NUM_WAY) {
-        for (way=0; way<NUM_WAY; way++) {
-            if (block[set][way].lru == NUM_WAY-1) {
+    if (way == current_assoc) {
+        for (way=0; way<current_assoc; way++) {
+            if (block[set][way].lru == current_assoc-1) {
 
                 DP ( if (warmup_complete[cpu]) {
                 cout << "[" << NAME << "] " << __func__ << " instr_id: " << instr_id << " replace set: " << set << " way: " << way;
@@ -48,7 +50,7 @@ uint32_t CACHE::lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const 
         }
     }
 
-    if (way == NUM_WAY) {
+    if (way == current_assoc) {
         cerr << "[" << NAME << "] " << __func__ << " no victim! set: " << set << endl;
         assert(0);
     }
@@ -59,7 +61,7 @@ uint32_t CACHE::lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const 
 void CACHE::lru_update(uint32_t set, uint32_t way)
 {
     // update lru replacement state
-    for (uint32_t i=0; i<NUM_WAY; i++) {
+    for (uint32_t i=0; i<current_assoc; i++) {
         if (block[set][i].lru < block[set][way].lru) {
             block[set][i].lru++;
         }

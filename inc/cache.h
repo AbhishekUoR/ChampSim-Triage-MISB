@@ -89,6 +89,8 @@ class CACHE : public MEMORY {
     uint32_t MAX_READ, MAX_FILL;
     uint8_t cache_type;
 
+    uint32_t current_assoc;
+
     // prefetch stats
     uint64_t pf_requested,
              pf_issued,
@@ -115,6 +117,7 @@ class CACHE : public MEMORY {
         : NAME(v1), NUM_SET(v2), NUM_WAY(v3), NUM_LINE(v4), WQ_SIZE(v5), RQ_SIZE(v6), PQ_SIZE(v7), MSHR_SIZE(v8) {
 
         LATENCY = 0;
+        current_assoc = NUM_WAY;
 
         // cache block
         block = new BLOCK* [NUM_SET];
