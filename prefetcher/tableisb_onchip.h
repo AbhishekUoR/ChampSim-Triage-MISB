@@ -8,6 +8,10 @@
 #include "optgen_simple.h"
 #include "isb_hawkeye_predictor.h"
 
+#define ONCHIP_LINE_SIZE 1
+#define ONCHIP_LINE_SHIFT 0
+#define INVALID_ADDR 0xdeadbeef
+
 struct TableISBConfig;
 
 enum TableISBReplType {
@@ -17,15 +21,17 @@ enum TableISBReplType {
 };
 
 struct TableISBOnchipEntry {
-    uint64_t next_addr;
-    int confidence;
+    uint64_t next_addr[ONCHIP_LINE_SIZE];
+    int confidence[ONCHIP_LINE_SIZE];
+    bool valid[ONCHIP_LINE_SIZE];
     // Used for replacement policy, it is rrpv for rrpv-based replacement
     // policies, but can be used for other usages (like frequency in LFU）
     uint64_t rrpv;
 
     TableISBOnchipEntry();
-    void increase_confidence();
-    void decrease_confidence();
+    void increase_confidence(unsigned);
+    void decrease_confidence(unsigned);
+    void init();
 };
 
 class TableISBRepl {
@@ -98,6 +104,7 @@ class TableISBOnchip {
     TableISBRepl *repl;
 
     uint64_t get_set_id(uint64_t addr);
+    uint64_t get_line_offset(uint64_t addr);
 
     public:
         TableISBOnchip();
