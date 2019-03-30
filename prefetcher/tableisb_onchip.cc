@@ -81,6 +81,9 @@ int TableISBOnchip::decrease_confidence(uint64_t addr)
 void TableISBOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl)
 {
     assoc = repl->get_assoc();
+    if (assoc == 0) {
+        return;
+    }
     uint64_t set_id = get_set_id(prev_addr);
     debug_cout << hex << "update prev_addr: " << prev_addr
         << ", next_addr: " << next_addr
@@ -109,6 +112,9 @@ bool TableISBOnchip::get_next_addr(uint64_t prev_addr, uint64_t &next_addr,
         uint64_t pc, bool update_stats)
 {
     assoc = repl->get_assoc();
+    if (assoc == 0) {
+        return false;
+    }
     uint64_t set_id = get_set_id(prev_addr);
     assert(set_id < num_sets);
     map<uint64_t, TableISBOnchipEntry>& entry_map = entry_list[set_id];
