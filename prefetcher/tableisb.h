@@ -14,6 +14,7 @@ struct TableISBConfig {
 
     int on_chip_size, on_chip_assoc;
     int training_unit_size;
+    bool use_dynamic_assoc;
 
     TableISBReplType repl;
 };
@@ -40,6 +41,7 @@ class TableISB {
                 bool cache_hit, uint64_t *prefetch_list,
                 int max_degree);
         void print_stats();
+        uint32_t get_assoc();
 };
 
 #endif // __TABLEISB_H__

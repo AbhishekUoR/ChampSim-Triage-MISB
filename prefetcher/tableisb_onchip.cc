@@ -161,6 +161,11 @@ bool TableISBOnchip::get_next_addr(uint64_t prev_addr, uint64_t &next_addr,
     }
 }
 
+uint32_t TableISBOnchip::get_assoc()
+{
+    return repl->get_assoc();
+}
+
 void TableISBOnchip::print_stats()
 {
     assert(repl != NULL);

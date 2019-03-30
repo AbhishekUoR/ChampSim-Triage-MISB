@@ -116,6 +116,7 @@ class TableISBOnchip {
         int decrease_confidence(uint64_t addr);
 
         void print_stats();
+        uint32_t get_assoc();
 };
 
 #endif // __TABLEISB_ONCHIP_H__
