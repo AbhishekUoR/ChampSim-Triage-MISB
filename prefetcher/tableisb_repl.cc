@@ -15,6 +15,7 @@ using namespace std;
 #define debug_cout if (0) cerr
 #endif
 
+unsigned hawkeye_sample_assoc[] = {4,8};
 
 TableISBRepl::TableISBRepl(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list)
     : entry_list(entry_list)
@@ -92,12 +93,22 @@ TableISBReplHawkeye::TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISB
 {
     max_rrpv = 3;
     uint64_t num_sets = entry_list->size();
-    optgen.resize(num_sets);
+//    optgen.resize(num_sets);
     optgen_mytimer.resize(num_sets);
     optgen_addr_history.clear();
 
-    for (size_t i = 0; i < num_sets; ++i) {
-        optgen[i].init(assoc-2);
+//    for (size_t i = 0; i < num_sets; ++i) {
+//        optgen[i].init(assoc-2);
+//    }
+
+    last_access_count = curr_access_count = 0;
+    dynamic_optgen_choice = 1;
+    sample_optgen.resize(HAWKEYE_SAMPLE_ASSOC_COUNT);
+    for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
+        sample_optgen[l].resize(num_sets);
+        for (size_t i = 0; i < num_sets; ++i) {
+            sample_optgen[l][i].init(hawkeye_sample_assoc[l]-2);
+        }
     }
 }
 
@@ -109,10 +120,17 @@ TableISBReplHawkeye::TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISB
 void TableISBReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
 {
     map<uint64_t, TableISBOnchipEntry>& entry_map = (*entry_list)[set_id];
+    if (curr_access_count - last_access_count > HAWKEYE_EPOCH_LENGTH) {
+        choose_optgen();
+        curr_access_count = last_access_count;
+    } else {
+        ++curr_access_count;
+    }
+    debug_cout << "hawkeye optgen choice: " << dynamic_optgen_choice << endl;
     if(SAMPLED_SET(set_id))
     {
         uint64_t curr_quanta = optgen_mytimer[set_id];
-        bool opt_hit = false;
+        bool opt_hit[] = {false, false};
 
         signatures[addr] = pc;
         if(optgen_addr_history.find(addr) != optgen_addr_history.end())
@@ -121,23 +139,32 @@ void TableISBReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
             //    cout << last_quanta << " " << curr_quanta << endl;
             assert(curr_quanta >= optgen_addr_history[addr].last_quanta);
             uint64_t last_pc = optgen_addr_history[addr].PC;
-            opt_hit = optgen[set_id].should_cache(curr_quanta, last_quanta, false, 0); //TODO: CPU
-            if (opt_hit) {
-                predictor.increment(last_pc);
-            } else {
-                //predictor.decrement(last_pc|(bits(set_id,6,13)<<24));
-                predictor.decrement(last_pc);
+//            opt_hit = optgen[set_id].should_cache(curr_quanta, last_quanta, false, 0); //TODO: CPU
+            for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
+                opt_hit[l] = sample_optgen[l][set_id].should_cache(curr_quanta, last_quanta, false, 0);
+                sample_optgen[l][set_id].add_access(curr_quanta, 0);
             }
-            debug_cout <<  "Train: " << hex << last_pc << " " << dec << opt_hit << endl;
+            if (dynamic_optgen_choice != 2) {
+                if (opt_hit[dynamic_optgen_choice]) {
+                    predictor.increment(last_pc);
+                } else {
+                    //predictor.decrement(last_pc|(bits(set_id,6,13)<<24));
+                    predictor.decrement(last_pc);
+                }
+                debug_cout <<  "Train: " << hex << last_pc << " " << dec << opt_hit[dynamic_optgen_choice] << endl;
+            }
             //Some maintenance operations for OPTgen
-            optgen[set_id].add_access(curr_quanta, 0); //TODO: CPU
+            //optgen[set_id].add_access(curr_quanta, 0); //TODO: CPU
         }
         // This is the first time we are seeing this line
         else
         {
             //Initialize a new entry in the sampler
             optgen_addr_history[addr].init(curr_quanta);
-            optgen[set_id].add_access(curr_quanta, 0); //TODO: CPU
+            //optgen[set_id].add_access(curr_quanta, 0); //TODO: CPU
+            for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
+                sample_optgen[l][set_id].add_access(curr_quanta, 0);
+            }
         }
 
         optgen_addr_history[addr].update(optgen_mytimer[set_id], pc, false);
@@ -212,15 +239,60 @@ uint64_t TableISBReplHawkeye::pickVictim(uint64_t set_id)
     return lru_victim;
 }
 
+#define HAWKEYE_OPTGEN_THRESHOLD 0.3
+#define HAWKEYE_OPTGEN_THRESHOLD2 0.05
+void TableISBReplHawkeye::choose_optgen()
+{
+    double hit_rate[HAWKEYE_SAMPLE_ASSOC_COUNT];
+    for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
+        uint64_t access = 0, hits = 0;
+        for (size_t i = 0; i < sample_optgen[0].size(); ++i) {
+            debug_cout << "sampleoptgen[" << l << "][" << i << "].access = " << sample_optgen[l][i].access
+                << ", hits = " << sample_optgen[l][i].get_num_opt_hits() << endl;
+
+            access += sample_optgen[l][i].access;
+            hits +=  sample_optgen[l][i].get_num_opt_hits();
+        }
+        hit_rate[l] = double(hits) / double(access);
+    }
+    // XXX Ad-hoc way of choosing the optgen
+    if (hit_rate[1] > HAWKEYE_OPTGEN_THRESHOLD+HAWKEYE_OPTGEN_THRESHOLD2 && hit_rate[1] > hit_rate[0] + HAWKEYE_OPTGEN_THRESHOLD2) {
+        dynamic_optgen_choice = 1;
+    } else if (hit_rate[0] > HAWKEYE_OPTGEN_THRESHOLD) {
+        dynamic_optgen_choice = 0;
+    } else {
+        dynamic_optgen_choice = 2;
+    }
+    cout << "hit_rate[0]: " << hit_rate[0] << ", hit_rate[1]: " << hit_rate[1] << ", dynamic_optgen_choice: "
+        << dynamic_optgen_choice << endl;
+}
+
+uint32_t TableISBReplHawkeye::get_assoc()
+{
+    switch (dynamic_optgen_choice) {
+        case 0:
+            return 4;
+        case 1:
+            return 8;
+        case 2:
+            return 0;
+        default:
+            // This can't happen
+            assert(0);
+    }
+}
+
 void TableISBReplHawkeye::print_stats()
 {
     unsigned int hits = 0, access = 0, traffic = 0;
+    /*
     for(unsigned int i=0; i<optgen.size(); i++)
     {
         access += optgen[i].access;
         hits += optgen[i].get_num_opt_hits();
         traffic += optgen[i].get_traffic();
     }
+    */
 
     std::cout << "OPTgen accesses: " << access
         << ", hits: " << hits
@@ -228,6 +300,20 @@ void TableISBReplHawkeye::print_stats()
         << ", hit rate: " << double(hits) / double(access)
         << ", traffic rate: " << double(traffic) / double(access)
         << std::endl;
+    for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
+        access = 0, hits = 0, traffic = 0;
+        for (size_t i = 0; i < sample_optgen[l].size(); ++i) {
+            access += sample_optgen[l][i].access;
+            hits +=  sample_optgen[l][i].get_num_opt_hits();
+            traffic +=  sample_optgen[l][i].get_traffic();
+        }
+        std::cout << "SAMPLEOPTGEN " << l << " accesses: " << access
+            << ", hits: " << hits
+            << ", traffic: " << traffic
+            << ", hit rate: " << double(hits) / double(access)
+            << ", traffic rate: " << double(traffic) / double(access)
+            << std::endl;
+    }
 }
 
 TableISBReplPerfect::TableISBReplPerfect(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list)

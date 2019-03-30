@@ -80,6 +80,7 @@ int TableISBOnchip::decrease_confidence(uint64_t addr)
 
 void TableISBOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl)
 {
+    assoc = repl->get_assoc();
     uint64_t set_id = get_set_id(prev_addr);
     debug_cout << hex << "update prev_addr: " << prev_addr
         << ", next_addr: " << next_addr
@@ -93,8 +94,8 @@ void TableISBOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc,
         if(update_repl)
             repl->addEntry(set_id, prev_addr, pc);
     } else {
-        if (repl_type != TABLEISB_REPL_PERFECT && entry_map.size() >= assoc) {
-            assert(entry_map.size() == assoc);
+        while (repl_type != TABLEISB_REPL_PERFECT && entry_map.size() >= assoc) {
+//            assert(entry_map.size() == assoc);
             uint64_t victim_addr = repl->pickVictim(set_id);
             entry_map.erase(victim_addr);
         }
@@ -107,6 +108,7 @@ void TableISBOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc,
 bool TableISBOnchip::get_next_addr(uint64_t prev_addr, uint64_t &next_addr,
         uint64_t pc, bool update_stats)
 {
+    assoc = repl->get_assoc();
     uint64_t set_id = get_set_id(prev_addr);
     assert(set_id < num_sets);
     map<uint64_t, TableISBOnchipEntry>& entry_map = entry_list[set_id];
