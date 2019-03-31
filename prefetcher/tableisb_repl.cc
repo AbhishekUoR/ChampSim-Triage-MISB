@@ -24,7 +24,7 @@ TableISBRepl::TableISBRepl(std::vector<std::map<uint64_t, TableISBOnchipEntry> >
 
 TableISBRepl* TableISBRepl::create_repl(
         std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list,
-        TableISBReplType repl_type, uint64_t assoc)
+        TableISBReplType repl_type, uint64_t assoc, bool use_dynamic_assoc)
 {
     TableISBRepl *repl;
     switch (repl_type) {
@@ -32,7 +32,7 @@ TableISBRepl* TableISBRepl::create_repl(
             repl = new TableISBReplLRU(entry_list);
             break;
         case TABLEISB_REPL_HAWKEYE:
-            repl = new TableISBReplHawkeye(entry_list, assoc);
+            repl = new TableISBReplHawkeye(entry_list, assoc, use_dynamic_assoc);
             break;
         case TABLEISB_REPL_PERFECT:
             repl = new TableISBReplPerfect(entry_list);
@@ -88,7 +88,7 @@ uint64_t TableISBReplLRU::pickVictim(uint64_t set_id)
 }
 
 TableISBReplHawkeye::TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list,
-        uint64_t assoc)
+        uint64_t assoc, bool use_dynamic_assoc)
     : TableISBRepl(entry_list)
 {
     max_rrpv = 3;
@@ -102,7 +102,14 @@ TableISBReplHawkeye::TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISB
 //    }
 
     last_access_count = curr_access_count = 0;
-    dynamic_optgen_choice = 1;
+    if (assoc==4) {
+        dynamic_optgen_choice = 0;
+    } else if (assoc ==8) {
+        dynamic_optgen_choice = 1;
+    } else {
+        dynamic_optgen_choice = 1;
+    }
+    use_dynamic = use_dynamic_assoc;
     sample_optgen.resize(HAWKEYE_SAMPLE_ASSOC_COUNT);
     for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
         sample_optgen[l].resize(num_sets);
@@ -122,7 +129,7 @@ void TableISBReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
     map<uint64_t, TableISBOnchipEntry>& entry_map = (*entry_list)[set_id];
     if (curr_access_count - last_access_count > HAWKEYE_EPOCH_LENGTH) {
         choose_optgen();
-        curr_access_count = last_access_count;
+        last_access_count = curr_access_count;
     } else {
         ++curr_access_count;
     }

@@ -33,6 +33,7 @@ void CACHE::llc_prefetcher_initialize()
     conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
 //    conf[cpu].repl = TABLEISB_REPL_PERFECT;
     conf[cpu].use_dynamic_assoc = true;
+//    conf[cpu].use_dynamic_assoc = false;
 
     data[cpu].set_conf(&conf[cpu]);
 }
@@ -75,10 +76,10 @@ uint32_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         }
     }
     // Set cache assoc if dynamic
-    if (conf[cpu].use_dynamic_assoc) {
+//    if (conf[cpu].use_dynamic_assoc) {
 //        cout << "LLC WAY: " << LLC_WAY << ", ASSOC: " << data[cpu].get_assoc() << endl;
         current_assoc = LLC_WAY - data[cpu].get_assoc();
-    }
+//    }
     return metadata_in;
 }
 
