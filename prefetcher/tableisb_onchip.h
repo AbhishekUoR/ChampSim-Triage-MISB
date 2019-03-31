@@ -47,7 +47,7 @@ class TableISBRepl {
         virtual uint32_t get_assoc() { return 8; }
 
         static TableISBRepl* create_repl(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list,
-                TableISBReplType type, uint64_t assoc);
+                TableISBReplType type, uint64_t assoc, bool use_dynamic_assoc);
 };
 
 class TableISBReplLRU : public TableISBRepl
@@ -76,11 +76,12 @@ class TableISBReplHawkeye : public TableISBRepl
     std::map<uint64_t, uint32_t> hawkeye_pc_ps_total_predictions;
     IsbHawkeyePCPredictor predictor;
     uint64_t last_access_count, curr_access_count;
+    bool use_dynamic;
 
     void choose_optgen();
 
     public:
-        TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list, uint64_t assoc);
+        TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list, uint64_t assoc, bool use_dynamic_assoc);
         void addEntry(uint64_t set_id, uint64_t addr, uint64_t pc);
         uint64_t pickVictim(uint64_t set_id);
         uint32_t get_assoc();
@@ -102,6 +103,7 @@ class TableISBOnchip {
     std::vector<std::map<uint64_t, TableISBOnchipEntry> > entry_list;
     TableISBReplType repl_type;
     TableISBRepl *repl;
+    bool use_dynamic_assoc;
 
     uint64_t get_set_id(uint64_t addr);
     uint64_t get_line_offset(uint64_t addr);

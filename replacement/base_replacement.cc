@@ -36,7 +36,7 @@ uint32_t CACHE::lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const 
     }
 
     // LRU victim
-    if (way == current_assoc) {
+    while (way == current_assoc) {
         for (way=0; way<current_assoc; way++) {
             if (block[set][way].lru == current_assoc-1) {
 
@@ -48,10 +48,16 @@ uint32_t CACHE::lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const 
                 break;
             }
         }
+        if (way == current_assoc) {
+            for (uint32_t i=0; i<current_assoc; i++) {
+                block[set][i].lru++;
+            }
+        }
     }
 
     if (way == current_assoc) {
-        cerr << "[" << NAME << "] " << __func__ << " no victim! set: " << set << endl;
+        cerr << "[" << NAME << "] " << __func__ << " no victim! set: " << set
+            << ", current_assoc: " << current_assoc << endl;
         assert(0);
     }
 
