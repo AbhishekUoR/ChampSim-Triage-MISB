@@ -23,8 +23,8 @@ void CACHE::l2c_prefetcher_initialize()
 //    conf[cpu].on_chip_size = 16384;  //64K
 //    conf[cpu].on_chip_size = 32768;  //128KB
 //    conf[cpu].on_chip_size = 65536;  //256KB
-    conf[cpu].on_chip_size = 131072; //512KB
-//    conf[cpu].on_chip_size = 262144; //1MB
+//    conf[cpu].on_chip_size = 131072; //512KB
+    conf[cpu].on_chip_size = 262144; //1MB
 //    conf[cpu].on_chip_size = 524288;  //2MB
     conf[cpu].on_chip_assoc = 8;
 //    conf[cpu].on_chip_assoc = 524288;
@@ -32,8 +32,8 @@ void CACHE::l2c_prefetcher_initialize()
 //    conf[cpu].repl = TABLEISB_REPL_LRU;
     conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
 //    conf[cpu].repl = TABLEISB_REPL_PERFECT;
-    conf[cpu].use_dynamic_assoc = true;
-//    conf[cpu].use_dynamic_assoc = false;
+//    conf[cpu].use_dynamic_assoc = true;
+    conf[cpu].use_dynamic_assoc = false;
 
     data[cpu].set_conf(&conf[cpu]);
 }
@@ -75,11 +75,17 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
                 break;
         }
     }
+
     // Set cache assoc if dynamic
-//    if (conf[cpu].use_dynamic_assoc) {
-//        cout << "LLC WAY: " << LLC_WAY << ", ASSOC: " << data[cpu].get_assoc() << endl;
-        current_assoc = LLC_WAY - data[cpu].get_assoc();
-//    }
+    //cout << "LLC WAY: " << LLC_WAY << ", ASSOC: " << data[cpu].get_assoc() << endl;
+    unsigned total_assoc = 0;
+    for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
+        total_assoc += data[mycpu].get_assoc();
+    }
+    total_assoc /= NUM_CPUS;
+    assert (total_assoc < LLC_WAY);
+    current_assoc = LLC_WAY - total_assoc;
+
     return metadata_in;
 }
 

@@ -96,6 +96,8 @@ TableISBReplHawkeye::TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISB
 //    optgen.resize(num_sets);
     optgen_mytimer.resize(num_sets);
     optgen_addr_history.clear();
+    cout << "Init TableISBReplHawkeye, assoc: " << assoc << ", use_dynamic_assoc: " << use_dynamic_assoc
+        << endl;
 
 //    for (size_t i = 0; i < num_sets; ++i) {
 //        optgen[i].init(assoc-2);
@@ -126,12 +128,15 @@ TableISBReplHawkeye::TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISB
 
 void TableISBReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
 {
+    debug_cout << hex << "Hawkeye addEntry: set_id: " << set_id << ", addr: " << addr << ", pc: " << pc << endl;
     map<uint64_t, TableISBOnchipEntry>& entry_map = (*entry_list)[set_id];
-    if (curr_access_count - last_access_count > HAWKEYE_EPOCH_LENGTH) {
-        choose_optgen();
-        last_access_count = curr_access_count;
-    } else {
-        ++curr_access_count;
+    if (use_dynamic) {
+        if (curr_access_count - last_access_count > HAWKEYE_EPOCH_LENGTH) {
+            choose_optgen();
+            last_access_count = curr_access_count;
+        } else {
+            ++curr_access_count;
+        }
     }
     debug_cout << "hawkeye optgen choice: " << dynamic_optgen_choice << endl;
     if(SAMPLED_SET(set_id))
@@ -150,6 +155,9 @@ void TableISBReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
             for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
                 opt_hit[l] = sample_optgen[l][set_id].should_cache(curr_quanta, last_quanta, false, 0);
                 sample_optgen[l][set_id].add_access(curr_quanta, 0);
+                debug_cout << l << " SHOULD CACHE ADDR: " << addr << ", opt_hit: " << opt_hit[l]
+                    << ", curr_quanta: " << curr_quanta << ", last_quanta: " << last_quanta
+                    << endl;
             }
             if (dynamic_optgen_choice != 2) {
                 if (opt_hit[dynamic_optgen_choice]) {
@@ -299,7 +307,6 @@ void TableISBReplHawkeye::print_stats()
         hits += optgen[i].get_num_opt_hits();
         traffic += optgen[i].get_traffic();
     }
-    */
 
     std::cout << "OPTgen accesses: " << access
         << ", hits: " << hits
@@ -307,6 +314,7 @@ void TableISBReplHawkeye::print_stats()
         << ", hit rate: " << double(hits) / double(access)
         << ", traffic rate: " << double(traffic) / double(access)
         << std::endl;
+    */
     for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
         access = 0, hits = 0, traffic = 0;
         for (size_t i = 0; i < sample_optgen[l].size(); ++i) {

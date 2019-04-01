@@ -21,6 +21,10 @@ TableISB::TableISB()
     predict_count = 0;
     same_addr = 0;
     new_addr = 0;
+    no_next_addr = 0;
+    conf_dec_retain = 0;
+    conf_dec_update = 0;
+    conf_inc = 0;
     new_stream = 0;
 }
 
@@ -55,13 +59,17 @@ void TableISB::train(uint64_t pc, uint64_t addr, bool cache_hit)
             bool next_addr_exists = on_chip_data.get_next_addr(prev_addr, next_addr, pc, false);
             if (!next_addr_exists) {
                 on_chip_data.update(prev_addr, addr, pc, true);
+                ++no_next_addr;
             } else if (next_addr != addr) {
                 int conf = on_chip_data.decrease_confidence(prev_addr);
+                ++conf_dec_retain;
                 if (conf == 0) {
+                    ++conf_dec_update;
                     on_chip_data.update(prev_addr, addr, pc, false);
                 }
             } else {
                 on_chip_data.increase_confidence(prev_addr);
+                ++conf_inc;
             }
         }
     } else {
@@ -125,6 +133,10 @@ void TableISB::print_stats()
     cout << "same_addr=" << same_addr <<endl;
     cout << "new_addr=" << new_addr <<endl;
     cout << "new_stream=" << new_stream <<endl;
+    cout << "no_next_addr=" << no_next_addr <<endl;
+    cout << "conf_dec_retain=" << conf_dec_retain <<endl;
+    cout << "conf_dec_update=" << conf_dec_update <<endl;
+    cout << "conf_inc=" << conf_inc <<endl;
 
     on_chip_data.print_stats();
 }
