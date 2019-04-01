@@ -84,8 +84,8 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     }
     total_assoc /= NUM_CPUS;
     assert (total_assoc < LLC_WAY);
-    current_assoc = LLC_WAY - total_assoc;
-
+    static_cast<CACHE*>(lower_level)->current_assoc = LLC_WAY - total_assoc;
+    //cout << total_assoc << " " << current_assoc << " " << data[cpu].get_assoc() << endl;
     return metadata_in;
 }
 
