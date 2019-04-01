@@ -38,7 +38,7 @@ void CACHE::llc_prefetcher_initialize()
     data[cpu].set_conf(&conf[cpu]);
 }
 
-uint32_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
+uint64_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
 {
     cpu = 0;
     if (type != LOAD) {
@@ -92,7 +92,7 @@ uint32_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     return metadata_in;
 }
 
-uint32_t CACHE::llc_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint64_t metadata_in)
+uint64_t CACHE::llc_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint64_t metadata_in)
 {
     if(prefetch) {
         uint64_t next_addr;
