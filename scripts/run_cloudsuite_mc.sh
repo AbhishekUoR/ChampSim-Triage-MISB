@@ -19,7 +19,8 @@ do
     trace_file=$benchmark
     echo $f $benchmark 
 
-    output_dir="/scratch/cluster/akanksha/CRCRealOutput/4coreCRC/cloudsuite_ARM/$output/"
+    #output_dir="/scratch/cluster/akanksha/CRCRealOutput/4coreCRC/cloudsuite_ARM/$output/"
+    output_dir="/scratch/cluster/haowu/isb-meta/tisb-output-cloudsuite/$output/"
 
     if [ ! -e "$output_dir" ] ; then
         mkdir $output_dir
@@ -30,9 +31,9 @@ do
 
     #echo $output_dir
     #echo $trace_file
-    command="/u/akanksha/MyChampSim/ChampSim/scripts/run_champsim_cloudsuite_4core.sh $binary 50 50 $trace_file $output_dir"
+    command="/scratch/cluster/haowu/isb-meta/ChampSim_DPC3/scripts/run_champsim_cloudsuite_4core.sh $binary 50 50 $trace_file $output_dir"
 
-    /u/akanksha/cache_study/condor_shell --silent --log --condor_dir="$condor_dir" --condor_suffix="$benchmark" --output_dir="$output_dir/scripts" --simulate --script_name="$script_name" --cmdline="$command"
+    condor_shell --silent --log --condor_dir="$condor_dir" --condor_suffix="$benchmark" --output_dir="$output_dir/scripts" --simulate --script_name="$script_name" --cmdline="$command"
 
         #Submit the condor file
      /lusr/opt/condor/bin/condor_submit $output_dir/scripts/$script_name.condor

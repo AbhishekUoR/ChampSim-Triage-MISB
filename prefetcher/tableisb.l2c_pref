@@ -1,6 +1,5 @@
 
 #include "cache.h"
-//#include "bo_percore.h"
 #include "tableisb.h"
 
 #define TABLEISB_FILL_LEVEL FILL_L2
@@ -80,11 +79,13 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     // Set cache assoc if dynamic
     //cout << "LLC WAY: " << LLC_WAY << ", ASSOC: " << data[cpu].get_assoc() << endl;
     unsigned total_assoc = 0;
-    for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
-        total_assoc += data[mycpu].get_assoc();
-    }
-    total_assoc /= NUM_CPUS;
-    assert (total_assoc < LLC_WAY);
+//    for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
+//        total_assoc += data[mycpu].get_assoc();
+//    }
+//    total_assoc /= NUM_CPUS;
+//    assert (total_assoc < LLC_WAY);
+    // XXX: We only have everything in the same tableisb at the moment.
+    total_assoc = data[cpu].get_assoc();
     if (conf[cpu].repl != TABLEISB_REPL_PERFECT)
         static_cast<CACHE*>(lower_level)->current_assoc = LLC_WAY - total_assoc;
 
