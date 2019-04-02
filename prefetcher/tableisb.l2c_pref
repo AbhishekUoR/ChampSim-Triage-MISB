@@ -15,7 +15,7 @@ uint64_t last_address[NUM_CPUS];
 void CACHE::l2c_prefetcher_initialize() 
 {
     cout << NUM_CPUS << endl;
-    cpu = 0;
+    //cpu = 0;
     conf[cpu].lookahead = 1;
     conf[cpu].degree = 1;
 //    conf[cpu].on_chip_size = 4096;
@@ -40,7 +40,7 @@ void CACHE::l2c_prefetcher_initialize()
 
 uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
 {
-    cpu = 0;
+//    cpu = 0;
     if (type != LOAD) {
         return metadata_in;
     }
@@ -105,7 +105,7 @@ uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
 
 void CACHE::l2c_prefetcher_final_stats()
 {
-    cpu = 0;
+    //cpu = 0;
     cout << "CPU " << cpu << " TABLEISB Stats:" << endl;
 
     data[cpu].print_stats();
