@@ -26,6 +26,7 @@ TableISB::TableISB()
     conf_dec_update = 0;
     conf_inc = 0;
     new_stream = 0;
+    total_assoc = 0;
 }
 
 void TableISB::set_conf(TableISBConfig *config)
@@ -101,6 +102,7 @@ void TableISB::calculatePrefetch(uint64_t pc, uint64_t addr,
     assert(degree == 1);
 
     assert(degree <= max_degree);
+
     
     if (pc == 0) return; //TODO: think on how to handle prefetches from lower level
 
@@ -109,6 +111,7 @@ void TableISB::calculatePrefetch(uint64_t pc, uint64_t addr,
 
     next_addr_list.clear();
     ++trigger_count;
+    total_assoc+=get_assoc();
 
     // Predict
     predict(pc, addr, cache_hit);
@@ -137,6 +140,7 @@ void TableISB::print_stats()
     cout << "conf_dec_retain=" << conf_dec_retain <<endl;
     cout << "conf_dec_update=" << conf_dec_update <<endl;
     cout << "conf_inc=" << conf_inc <<endl;
+    cout << "total_assoc=" << total_assoc <<endl;
 
     on_chip_data.print_stats();
 }
