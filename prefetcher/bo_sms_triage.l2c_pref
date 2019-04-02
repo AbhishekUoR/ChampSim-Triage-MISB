@@ -1,4 +1,6 @@
-
+#include <stdint.h>
+#include "bo_percore.h" 
+#include "sms.h" 
 #include "cache.h"
 #include "tableisb.h"
 
@@ -6,15 +8,16 @@
 //#define TABLEISB_FILL_LEVEL FILL_LLC
 #define MAX_ALLOWED_DEGREE 8
 
+#define DEGREE 1
+
 TableISBConfig conf[NUM_CPUS];
 TableISB data[NUM_CPUS];
 uint64_t last_address[NUM_CPUS];
 
-//16K entries = 64KB
-void CACHE::l2c_prefetcher_initialize() 
-{
-    cout << NUM_CPUS << endl;
-    //cpu = 0;
+void CACHE::l2c_prefetcher_initialize() {
+    cpu = 0;
+	bo_l2c_prefetcher_initialize();
+    sms_l2c_prefetcher_initialize(); 
     conf[cpu].lookahead = 1;
     conf[cpu].degree = 1;
 //    conf[cpu].on_chip_size = 4096;
@@ -29,17 +32,31 @@ void CACHE::l2c_prefetcher_initialize()
 //    conf[cpu].on_chip_assoc = 524288;
     conf[cpu].training_unit_size = 10000000;
 //    conf[cpu].repl = TABLEISB_REPL_LRU;
-//    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
-    conf[cpu].repl = TABLEISB_REPL_PERFECT;
-//    conf[cpu].use_dynamic_assoc = true;
-    conf[cpu].use_dynamic_assoc = false;
+    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
+//    conf[cpu].repl = TABLEISB_REPL_PERFECT;
+    conf[cpu].use_dynamic_assoc = true;
+//    conf[cpu].use_dynamic_assoc = false;
 
     data[cpu].set_conf(&conf[cpu]);
 }
 
 uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
 {
-//    cpu = 0;
+
+    uint64_t bo_trigger_addr = 0;
+    uint64_t bo_target_offset = 0;
+    uint64_t bo_target_addr = 0;
+    bo_l2c_prefetcher_operate(addr, pc, cache_hit, type, this, &bo_trigger_addr, &bo_target_offset, 0);
+
+    if (bo_trigger_addr && bo_target_offset) {
+
+        for(unsigned int i=1; i<=DEGREE; i++) {
+            bo_target_addr = bo_trigger_addr + (i*bo_target_offset); 
+            bo_issue_prefetcher(this, pc, bo_trigger_addr, bo_target_addr, FILL_L2);
+        }
+    }
+    sms_l2c_prefetcher_operate(addr, pc, cache_hit, type, this);
+    cpu = 0;
     if (type != LOAD) {
         return metadata_in;
     }
@@ -79,13 +96,11 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     // Set cache assoc if dynamic
     //cout << "LLC WAY: " << LLC_WAY << ", ASSOC: " << data[cpu].get_assoc() << endl;
     unsigned total_assoc = 0;
-//    for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
-//        total_assoc += data[mycpu].get_assoc();
-//    }
-//    total_assoc /= NUM_CPUS;
-//    assert (total_assoc < LLC_WAY);
-    // XXX: We only have everything in the same tableisb at the moment.
-    total_assoc = data[cpu].get_assoc();
+    for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
+        total_assoc += data[mycpu].get_assoc();
+    }
+    total_assoc /= NUM_CPUS;
+    assert (total_assoc < LLC_WAY);
     if (conf[cpu].repl != TABLEISB_REPL_PERFECT)
         static_cast<CACHE*>(lower_level)->current_assoc = LLC_WAY - total_assoc;
 
@@ -95,22 +110,19 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
 
 uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint64_t metadata_in)
 {
+	bo_l2c_prefetcher_cache_fill(addr, set, way, prefetch, evicted_addr, this, 0);
+    sms_l2c_prefetcher_cache_fill(addr, set, way, prefetch, evicted_addr, this);
     if(prefetch) {
         uint64_t next_addr;
         bool next_addr_exists = data[0].on_chip_data.get_next_addr(metadata_in, next_addr, 0, true);
-        //assert(next_addr_exists);
-//        cout << "Filled " << hex << addr << "  by " << metadata_in << " " << next_addr_exists << endl;
     }
     return metadata_in;
 }
 
-void CACHE::l2c_prefetcher_final_stats()
-{
-    //cpu = 0;
-    cout << "CPU " << cpu << " TABLEISB Stats:" << endl;
-
+void CACHE::l2c_prefetcher_final_stats() {
+    cpu = 0;
+	bo_l2c_prefetcher_final_stats();
+    sms_l2c_prefetcher_final_stats();
     data[cpu].print_stats();
 }
-
-
 
