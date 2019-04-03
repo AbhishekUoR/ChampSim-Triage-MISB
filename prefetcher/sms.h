@@ -71,33 +71,28 @@ namespace SMS {
             thePHT(PHT_HEIGHT, PHT_WIDTH, 0, 14)
         {}
 
-        std::vector<address_t>* computeAddresses(address_t address, pattern_t pattern) {
-            address_t region_base(getRegionTag(address));
-
-            std::vector<address_t> *addresses = new std::vector<address_t>(); 
-
-            uint64_t mask = 1ULL;
-            for(unsigned int i = 0; i < NUM_BLOCKS; ++i) {
-                if(pattern & mask) {
-                    addresses->push_back(region_base + (i << LOG2_BLOCK_SIZE));
-                    STAT(PREFETCHES_COMPUTED);
-                }
-                mask = mask << 1;
-            }
-            
-
-            return addresses; 
-            // convert the given pattern to a vector of addresses
-        }
-
-        // TODO: move away from raw pointers
-        std::vector<address_t>* prefetchAddresses(address_t address, address_t ip) {
+        bool prefetchAddresses(address_t address, address_t ip,
+                vector<address_t>& pf_addrs) {
             PHT::Iter pht_ent = thePHT.find(ip);
+            pf_addrs.clear();
             if(pht_ent != thePHT.end()){
-                return computeAddresses(address, pht_ent->second.pattern);
+                pattern_t pattern = pht_ent->second.pattern;
+                address_t region_base(getRegionTag(address));
+
+                uint64_t mask = 1ULL;
+                for(unsigned int i = 0; i < NUM_BLOCKS; ++i) {
+                    if(pattern & mask) {
+                        pf_addrs.push_back(region_base + (i << LOG2_BLOCK_SIZE));
+                        STAT(PREFETCHES_COMPUTED);
+                    }
+                    mask = mask << 1;
+                }
+
+                return true; 
+            // convert the given pattern to a vector of addresses
             } 
 
-            return new vector<uint64_t>();
+            return false;
 
             // get the spatial pattern and compute the addressed to 
             // be prefetched. 
@@ -207,25 +202,25 @@ void sms_l2c_prefetcher_initialize() {
 // is called when a request is made to the next level memory
 void sms_l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, CACHE* cache) {
     for (int i = 0; i < DEGREE && !sms->buffer.empty(); i++) {
-        cache->prefetch_line(ip, addr, sms->buffer.front(), FILL_L2, 0);
+        DECODE(cout << "PREFETCHING: " << sms->buffer.front() << " pc: " << ip << " sim_cycle: " << current_core_cycle[0] << endl;)
+        cache->prefetch_line(ip, addr, sms->buffer.front(), FILL_LLC, 0);
         sms->buffer.pop();
 
-    }        
+    }
 
     if(sms->observePattern(addr, ip)) {
-        vector<uint64_t> *pf_addrs = sms->prefetchAddresses(addr, ip);
+        vector<uint64_t> pf_addrs;
+        sms->prefetchAddresses(addr, ip, pf_addrs);
 
-        DBCODE(if(pf_addrs->size()) {
-           cout << "PREFETCHED: " << pf_addrs->size() << " pc: " << ip << endl;
+        DBCODE(if(pf_addrs.size()) {
+           cout << "PREFETCHED: " << pf_addrs.size() << " pc: " << ip << endl;
         })
 
         total_prefetch_triggers++;
-        for(auto pf_addr: *pf_addrs) {
-            sms->buffer.push(pf_addr);
+        for(size_t i = 0; i < pf_addrs.size(); ++i) {
+            sms->buffer.push(pf_addrs[i]);
             total_prefetches++;
         }
-
-        delete pf_addrs;
     }
 }
 
