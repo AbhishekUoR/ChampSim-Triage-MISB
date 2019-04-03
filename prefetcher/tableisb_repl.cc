@@ -148,14 +148,15 @@ void TableISBReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
         if(optgen_addr_history.find(addr) != optgen_addr_history.end())
         {
             uint64_t last_quanta = optgen_addr_history[addr].last_quanta;
-            //    cout << last_quanta << " " << curr_quanta << endl;
-            assert(curr_quanta >= optgen_addr_history[addr].last_quanta);
+            assert(curr_quanta >= last_quanta);
+
             uint64_t last_pc = optgen_addr_history[addr].PC;
 //            opt_hit = optgen[set_id].should_cache(curr_quanta, last_quanta, false, 0); //TODO: CPU
             for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
-                opt_hit[l] = sample_optgen[l][set_id].should_cache(curr_quanta, last_quanta, false, 0);
-                sample_optgen[l][set_id].add_access(curr_quanta, 0);
-                debug_cout << l << " SHOULD CACHE ADDR: " << addr << ", opt_hit: " << opt_hit[l]
+                assert(curr_quanta > last_quanta);
+                opt_hit[l] = sample_optgen[l][set_id].should_cache(curr_quanta, last_quanta, false);
+                sample_optgen[l][set_id].add_access(curr_quanta);
+                debug_cout << l << " SHOULD CACHE ADDR: " << hex << addr << ", opt_hit: " << dec << opt_hit[l]
                     << ", curr_quanta: " << curr_quanta << ", last_quanta: " << last_quanta
                     << endl;
             }
@@ -178,7 +179,7 @@ void TableISBReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
             optgen_addr_history[addr].init(curr_quanta);
             //optgen[set_id].add_access(curr_quanta, 0); //TODO: CPU
             for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
-                sample_optgen[l][set_id].add_access(curr_quanta, 0);
+                sample_optgen[l][set_id].add_access(curr_quanta);
             }
         }
 
