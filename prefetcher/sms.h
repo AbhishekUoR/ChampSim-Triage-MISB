@@ -202,7 +202,7 @@ void sms_l2c_prefetcher_initialize() {
 // is called when a request is made to the next level memory
 void sms_l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, CACHE* cache) {
     for (int i = 0; i < DEGREE && !sms->buffer.empty(); i++) {
-        DECODE(cout << "PREFETCHING: " << sms->buffer.front() << " pc: " << ip << " sim_cycle: " << current_core_cycle[0] << endl;)
+        DBCODE(cout << "PREFETCHING: " << sms->buffer.front() << " pc: " << ip << " sim_cycle: " << current_core_cycle[0] << endl;)
         cache->prefetch_line(ip, addr, sms->buffer.front(), FILL_LLC, 0);
         sms->buffer.pop();
 

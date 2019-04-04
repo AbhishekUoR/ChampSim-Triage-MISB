@@ -26,7 +26,9 @@ TableISB::TableISB()
     conf_dec_update = 0;
     conf_inc = 0;
     new_stream = 0;
-    total_assoc = 0;
+    for (unsigned cpu = 0; cpu < NUM_CPUS; ++cpu) {
+        total_assoc[cpu] = 0;
+    }
 }
 
 void TableISB::set_conf(TableISBConfig *config)
@@ -95,7 +97,8 @@ void TableISB::predict(uint64_t pc, uint64_t addr, bool cache_hit)
 }
 
 void TableISB::calculatePrefetch(uint64_t pc, uint64_t addr,
-    bool cache_hit, uint64_t *prefetch_list, int max_degree)
+    bool cache_hit, uint64_t *prefetch_list, int max_degree,
+    uint64_t cpu)
 {
     // XXX Only allow lookahead = 1 and degree=1 for now
     assert(lookahead == 1);
@@ -111,7 +114,7 @@ void TableISB::calculatePrefetch(uint64_t pc, uint64_t addr,
 
     next_addr_list.clear();
     ++trigger_count;
-    total_assoc+=get_assoc();
+    total_assoc[cpu]+=get_assoc();
 
     // Predict
     predict(pc, addr, cache_hit);
@@ -140,7 +143,9 @@ void TableISB::print_stats()
     cout << "conf_dec_retain=" << conf_dec_retain <<endl;
     cout << "conf_dec_update=" << conf_dec_update <<endl;
     cout << "conf_inc=" << conf_inc <<endl;
-    cout << "total_assoc=" << total_assoc <<endl;
+    for (uint64_t cpu = 0; cpu < NUM_CPUS; ++cpu) {
+        cout << "total_assoc[" << cpu << "]=" << total_assoc[cpu] <<endl;
+    }
 
     on_chip_data.print_stats();
 }

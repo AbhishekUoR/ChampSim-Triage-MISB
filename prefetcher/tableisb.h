@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 
+#include "inc/champsim.h"
 #include "tableisb_training_unit.h"
 #include "tableisb_onchip.h"
 
@@ -31,7 +32,7 @@ class TableISB {
     uint64_t same_addr, new_addr, new_stream;
     uint64_t no_next_addr, conf_dec_retain, conf_dec_update, conf_inc;
     uint64_t predict_count, trigger_count;
-    uint64_t total_assoc;
+    uint64_t total_assoc[NUM_CPUS];
 
     std::vector<uint64_t> next_addr_list;
 
@@ -41,7 +42,7 @@ class TableISB {
         void set_conf(TableISBConfig *config);
         void calculatePrefetch(uint64_t pc, uint64_t addr,
                 bool cache_hit, uint64_t *prefetch_list,
-                int max_degree);
+                int max_degree, uint64_t cpu);
         void print_stats();
         uint32_t get_assoc();
 };
