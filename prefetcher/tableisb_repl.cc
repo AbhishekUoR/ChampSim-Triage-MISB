@@ -279,7 +279,7 @@ void TableISBReplHawkeye::choose_optgen()
     } else {
         dynamic_optgen_choice = 2;
     }
-    debug_cout << "hit_rate[0]: " << hit_rate[0] << ", hit_rate[1]: " << hit_rate[1] << ", dynamic_optgen_choice: "
+    cout << "hit_rate[0]: " << hit_rate[0] << ", hit_rate[1]: " << hit_rate[1] << ", dynamic_optgen_choice: "
         << dynamic_optgen_choice << endl;
 }
 

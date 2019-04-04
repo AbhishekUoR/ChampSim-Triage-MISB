@@ -126,6 +126,7 @@ void TableISBOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc,
     } else {
         while (repl_type != TABLEISB_REPL_PERFECT && entry_map.size() >= assoc && entry_map.size() > 0) {
             uint64_t victim_addr = repl->pickVictim(set_id);
+            assert(entry_map.count(victim_addr));
             entry_map.erase(victim_addr);
         }
         assert(!entry_map.count(tag));

@@ -26,8 +26,8 @@ do
     baseline_file="$baseline/$benchmark"".txt"
     dut_file="$dut/$benchmark"".txt"
 
-    traffic_increase=`perl stms_traffic.pl $baseline_file $dut_file`
-#   traffic_increase=`perl traffic.pl $baseline_file $dut_file`
+#    traffic_increase=`perl stms_traffic.pl $baseline_file $dut_file`
+   traffic_increase=`perl traffic.pl $baseline_file $dut_file`
     echo "$traffic_increase"
     traffic_increase_average=`perl arithmean.pl $traffic_increase $traffic_increase_average $count`
 done

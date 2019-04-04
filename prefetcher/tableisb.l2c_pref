@@ -14,7 +14,7 @@ uint64_t last_address[NUM_CPUS];
 void CACHE::l2c_prefetcher_initialize() 
 {
     cout << NUM_CPUS << endl;
-    //cpu = 0;
+//    cpu = 0;
     conf[cpu].lookahead = 1;
     conf[cpu].degree = 1;
 //    conf[cpu].on_chip_size = 4096;
@@ -59,7 +59,7 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         prefetch_addr_list[i] = 0;
     }
     data[cpu].calculatePrefetch(pc, addr, cache_hit, prefetch_addr_list,
-            MAX_ALLOWED_DEGREE);
+            MAX_ALLOWED_DEGREE, cpu);
 
     int prefetched = 0;
     for (i = 0; i < MAX_ALLOWED_DEGREE; ++i) {
@@ -79,13 +79,13 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     // Set cache assoc if dynamic
     //cout << "LLC WAY: " << LLC_WAY << ", ASSOC: " << data[cpu].get_assoc() << endl;
     unsigned total_assoc = 0;
-//    for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
-//        total_assoc += data[mycpu].get_assoc();
-//    }
-//    total_assoc /= NUM_CPUS;
-//    assert (total_assoc < LLC_WAY);
+    for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
+        total_assoc += data[mycpu].get_assoc();
+    }
+    total_assoc /= NUM_CPUS;
+    assert (total_assoc < LLC_WAY);
     // XXX: We only have everything in the same tableisb at the moment.
-    total_assoc = data[cpu].get_assoc();
+//    total_assoc = data[cpu].get_assoc();
     if (conf[cpu].repl != TABLEISB_REPL_PERFECT)
         static_cast<CACHE*>(lower_level)->current_assoc = LLC_WAY - total_assoc;
 
@@ -95,9 +95,10 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
 
 uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint64_t metadata_in)
 {
+//    cpu = 0;
     if(prefetch) {
         uint64_t next_addr;
-        bool next_addr_exists = data[0].on_chip_data.get_next_addr(metadata_in, next_addr, 0, true);
+        bool next_addr_exists = data[cpu].on_chip_data.get_next_addr(metadata_in, next_addr, 0, true);
         //assert(next_addr_exists);
 //        cout << "Filled " << hex << addr << "  by " << metadata_in << " " << next_addr_exists << endl;
     }
@@ -106,7 +107,7 @@ uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
 
 void CACHE::l2c_prefetcher_final_stats()
 {
-    //cpu = 0;
+ //   cpu = 0;
     cout << "CPU " << cpu << " TABLEISB Stats:" << endl;
 
     data[cpu].print_stats();

@@ -126,7 +126,7 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     unsigned int num_prefetched = 0;
     for(unsigned int i=0; i<candidates.size(); i++)
     {
-        int ret = prefetch_line(pc, addr, candidates[i], FILL_L2, 0);
+        int ret = prefetch_line(pc, addr, candidates[i], FILL_LLC, 0);
         if (ret == 1)
         {
             predictions++;

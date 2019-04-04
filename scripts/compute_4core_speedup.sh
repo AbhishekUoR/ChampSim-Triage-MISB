@@ -25,14 +25,14 @@ do
     
     #echo "$baseline_file $dut_file"
 
-#    trace0=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $1}'`
- #   trace1=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $2}'`
-#    trace2=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $3}'`
-#    trace3=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $4}'`
-    trace0=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $1}'`
-    trace1=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $2}'`
-    trace2=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $3}'`
-    trace3=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $4}'`
+    trace0=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $1}'`
+    trace1=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $2}'`
+    trace2=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $3}'`
+    trace3=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $4}'`
+#    trace0=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $1}'`
+#    trace1=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $2}'`
+#    trace2=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $3}'`
+#    trace3=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $4}'`
 #    trace0=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular.txt | awk '{print $1}'`
 #    trace1=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular.txt | awk '{print $2}'`
 #    trace2=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular.txt | awk '{print $3}'`

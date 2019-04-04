@@ -50,6 +50,8 @@ uint32_t CACHE::lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const 
         }
         if (way == current_assoc) {
             for (uint32_t i=0; i<current_assoc; i++) {
+                //cout << "current_assoc: " << current_assoc <<"block["<<set<<"][" << i << "].lru="
+                //    <<block[set][i].lru<<endl;
                 block[set][i].lru++;
             }
         }
