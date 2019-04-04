@@ -2,8 +2,8 @@
 #include "cache.h"
 #include "tableisb.h"
 
-#define TABLEISB_FILL_LEVEL FILL_L2
-//#define TABLEISB_FILL_LEVEL FILL_LLC
+//#define TABLEISB_FILL_LEVEL FILL_L2
+#define TABLEISB_FILL_LEVEL FILL_LLC
 #define MAX_ALLOWED_DEGREE 8
 
 TableISBConfig conf[NUM_CPUS];
@@ -29,10 +29,10 @@ void CACHE::l2c_prefetcher_initialize()
 //    conf[cpu].on_chip_assoc = 524288;
     conf[cpu].training_unit_size = 10000000;
 //    conf[cpu].repl = TABLEISB_REPL_LRU;
-//    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
-    conf[cpu].repl = TABLEISB_REPL_PERFECT;
-//    conf[cpu].use_dynamic_assoc = true;
-    conf[cpu].use_dynamic_assoc = false;
+    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
+//    conf[cpu].repl = TABLEISB_REPL_PERFECT;
+    conf[cpu].use_dynamic_assoc = true;
+//    conf[cpu].use_dynamic_assoc = false;
 
     data[cpu].set_conf(&conf[cpu]);
 }
@@ -79,13 +79,13 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     // Set cache assoc if dynamic
     //cout << "LLC WAY: " << LLC_WAY << ", ASSOC: " << data[cpu].get_assoc() << endl;
     unsigned total_assoc = 0;
-//    for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
-//        total_assoc += data[mycpu].get_assoc();
-//    }
-//    total_assoc /= NUM_CPUS;
-//    assert (total_assoc < LLC_WAY);
+    for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
+        total_assoc += data[mycpu].get_assoc();
+    }
+    total_assoc /= NUM_CPUS;
     // XXX: We only have everything in the same tableisb at the moment.
-    total_assoc = data[cpu].get_assoc();
+//    total_assoc = data[cpu].get_assoc();
+    assert(total_assoc < LLC_WAY);
     if (conf[cpu].repl != TABLEISB_REPL_PERFECT)
         static_cast<CACHE*>(lower_level)->current_assoc = LLC_WAY - total_assoc;
 
@@ -97,7 +97,7 @@ uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
 {
     if(prefetch) {
         uint64_t next_addr;
-        bool next_addr_exists = data[0].on_chip_data.get_next_addr(metadata_in, next_addr, 0, true);
+        bool next_addr_exists = data[cpu].on_chip_data.get_next_addr(metadata_in, next_addr, 0, true);
         //assert(next_addr_exists);
 //        cout << "Filled " << hex << addr << "  by " << metadata_in << " " << next_addr_exists << endl;
     }
