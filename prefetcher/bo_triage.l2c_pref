@@ -3,8 +3,8 @@
 #include "cache.h"
 #include "tableisb.h"
 
-#define TABLEISB_FILL_LEVEL FILL_L2
-//#define TABLEISB_FILL_LEVEL FILL_LLC
+//#define TABLEISB_FILL_LEVEL FILL_L2
+#define TABLEISB_FILL_LEVEL FILL_LLC
 #define MAX_ALLOWED_DEGREE 8
 
 #define DEGREE 1
@@ -32,8 +32,8 @@ void CACHE::l2c_prefetcher_initialize() {
 //    conf[cpu].repl = TABLEISB_REPL_LRU;
     conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
 //    conf[cpu].repl = TABLEISB_REPL_PERFECT;
-    conf[cpu].use_dynamic_assoc = true;
-//    conf[cpu].use_dynamic_assoc = false;
+//    conf[cpu].use_dynamic_assoc = true;
+    conf[cpu].use_dynamic_assoc = false;
 
     data[cpu].set_conf(&conf[cpu]);
 }
@@ -73,7 +73,7 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         prefetch_addr_list[i] = 0;
     }
     data[cpu].calculatePrefetch(pc, addr, cache_hit, prefetch_addr_list,
-            MAX_ALLOWED_DEGREE);
+            MAX_ALLOWED_DEGREE, cpu);
 
     int prefetched = 0;
     for (i = 0; i < MAX_ALLOWED_DEGREE; ++i) {

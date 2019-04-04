@@ -25,15 +25,23 @@ do
     
     #echo "$baseline_file $dut_file"
 
-    trace0=`sed -n ''$i'p' /u/akanksha/MyChampSim/ChampSim/sim_list/4core_workloads.txt | awk '{print $1}'`
-    trace1=`sed -n ''$i'p' /u/akanksha/MyChampSim/ChampSim/sim_list/4core_workloads.txt | awk '{print $2}'`
-    trace2=`sed -n ''$i'p' /u/akanksha/MyChampSim/ChampSim/sim_list/4core_workloads.txt | awk '{print $3}'`
-    trace3=`sed -n ''$i'p' /u/akanksha/MyChampSim/ChampSim/sim_list/4core_workloads.txt | awk '{print $4}'`
+#    trace0=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $1}'`
+ #   trace1=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $2}'`
+#    trace2=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $3}'`
+#    trace3=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular_irregular.txt | awk '{print $4}'`
+    trace0=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $1}'`
+    trace1=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $2}'`
+    trace2=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $3}'`
+    trace3=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_irregular.txt | awk '{print $4}'`
+#    trace0=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular.txt | awk '{print $1}'`
+#    trace1=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular.txt | awk '{print $2}'`
+#    trace2=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular.txt | awk '{print $3}'`
+#    trace3=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/4core_regular.txt | awk '{print $4}'`
 
-    sc_file0="$sc_baseline/$trace0"".txt"
-    sc_file1="$sc_baseline/$trace1"".txt"
-    sc_file2="$sc_baseline/$trace2"".txt"
-    sc_file3="$sc_baseline/$trace3"".txt"
+    sc_file0="$sc_baseline/$trace0"".stats"
+    sc_file1="$sc_baseline/$trace1"".stats"
+    sc_file2="$sc_baseline/$trace2"".stats"
+    sc_file3="$sc_baseline/$trace3"".stats"
 
 #    echo "$sc_file0 $sc_file1 $sc_file2 $sc_file3"
 
