@@ -255,7 +255,7 @@ uint64_t TableISBReplHawkeye::pickVictim(uint64_t set_id)
     return lru_victim;
 }
 
-#define HAWKEYE_OPTGEN_THRESHOLD 0.2
+#define HAWKEYE_OPTGEN_THRESHOLD 0.05
 #define HAWKEYE_OPTGEN_THRESHOLD2 0.05
 void TableISBReplHawkeye::choose_optgen()
 {
