@@ -29,10 +29,10 @@ void CACHE::l2c_prefetcher_initialize() {
 //    conf[cpu].on_chip_assoc = 524288;
     conf[cpu].training_unit_size = 10000000;
 //    conf[cpu].repl = TABLEISB_REPL_LRU;
-//    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
-    conf[cpu].repl = TABLEISB_REPL_PERFECT;
-//    conf[cpu].use_dynamic_assoc = true;
-    conf[cpu].use_dynamic_assoc = false;
+    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
+//    conf[cpu].repl = TABLEISB_REPL_PERFECT;
+    conf[cpu].use_dynamic_assoc = true;
+//    conf[cpu].use_dynamic_assoc = false;
 
     data[cpu].set_conf(&conf[cpu]);
 }
