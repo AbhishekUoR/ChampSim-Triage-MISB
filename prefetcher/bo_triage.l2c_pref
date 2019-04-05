@@ -43,7 +43,7 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     uint64_t bo_trigger_addr = 0;
     uint64_t bo_target_offset = 0;
     uint64_t bo_target_addr = 0;
-    bo_l2c_prefetcher_operate(addr, pc, cache_hit, type, this, &bo_trigger_addr, &bo_target_offset, 0);
+    bo_l2c_prefetcher_operate(addr, pc, cache_hit, type, this, &bo_trigger_addr, &bo_target_offset, cpu);
 
     if (bo_trigger_addr && bo_target_offset) {
 
@@ -78,7 +78,15 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         if (prefetch_addr_list[i] == 0) {
             break;
         }
-        int ret = prefetch_line(pc, addr, prefetch_addr_list[i], TABLEISB_FILL_LEVEL, addr);
+        PACKET test_packet;
+        test_packet.address = prefetch_addr_list[i] >> LOG2_BLOCK_SIZE;
+        test_packet.full_addr = prefetch_addr_list[i];
+        bool llc_hit = static_cast<CACHE*>(lower_level)->check_hit(&test_packet) != -1;
+        //cout << "addr: " << addr << ", cache_hit: " << int(cache_hit) << ", llc_hit: " << llc_hit << endl;
+        uint64_t md_in = addr;
+        if(llc_hit)
+            md_in = 0;
+        int ret = prefetch_line(pc, addr, prefetch_addr_list[i], TABLEISB_FILL_LEVEL, md_in);
         if(ret)
         {
  //           cout << hex << addr << " " << prefetch_addr_list[i] << dec << endl;
