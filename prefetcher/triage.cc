@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <iostream>
 
-#include "tableisb.h"
+#include "triage.h"
 
 using namespace std;
 
@@ -15,7 +15,7 @@ using namespace std;
 #endif
 
 
-TableISB::TableISB()
+Triage::Triage()
 {
     trigger_count = 0;
     predict_count = 0;
@@ -31,7 +31,7 @@ TableISB::TableISB()
 //    }
 }
 
-void TableISB::set_conf(TableISBConfig *config)
+void Triage::set_conf(TriageConfig *config)
 {
     assert(config != NULL);
     lookahead = config->lookahead;
@@ -41,7 +41,7 @@ void TableISB::set_conf(TableISBConfig *config)
     on_chip_data.set_conf(config);
 }
 
-void TableISB::train(uint64_t pc, uint64_t addr, bool cache_hit)
+void Triage::train(uint64_t pc, uint64_t addr, bool cache_hit)
 {
     if(cache_hit) {
         training_unit.set_addr(pc, addr);
@@ -84,7 +84,7 @@ void TableISB::train(uint64_t pc, uint64_t addr, bool cache_hit)
     training_unit.set_addr(pc, addr);
 }
 
-void TableISB::predict(uint64_t pc, uint64_t addr, bool cache_hit)
+void Triage::predict(uint64_t pc, uint64_t addr, bool cache_hit)
 {
     uint64_t next_addr;
     bool next_addr_exist = on_chip_data.get_next_addr(addr, next_addr, pc, false);
@@ -96,7 +96,7 @@ void TableISB::predict(uint64_t pc, uint64_t addr, bool cache_hit)
     }
 }
 
-void TableISB::calculatePrefetch(uint64_t pc, uint64_t addr,
+void Triage::calculatePrefetch(uint64_t pc, uint64_t addr,
     bool cache_hit, uint64_t *prefetch_list, int max_degree,
     uint64_t cpu)
 {
@@ -127,12 +127,12 @@ void TableISB::calculatePrefetch(uint64_t pc, uint64_t addr,
     }
 }
 
-uint32_t TableISB::get_assoc()
+uint32_t Triage::get_assoc()
 {
     return on_chip_data.get_assoc();
 }
 
-void TableISB::print_stats()
+void Triage::print_stats()
 {
     cout << dec << "trigger_count=" << trigger_count <<endl;
     cout << "predict_count=" << predict_count <<endl;

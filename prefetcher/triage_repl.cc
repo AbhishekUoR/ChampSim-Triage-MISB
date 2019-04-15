@@ -3,39 +3,39 @@
 #include <stdint.h>
 #include <iostream>
 
-#include "tableisb_onchip.h"
+#include "triage_onchip.h"
 
 using namespace std;
 
 //#define DEBUG
 
 #ifdef DEBUG
-#define debug_cout cerr << "[TABLEISB_REPL] "
+#define debug_cout cerr << "[TRIAGE_REPL] "
 #else
 #define debug_cout if (0) cerr
 #endif
 
 unsigned hawkeye_sample_assoc[] = {4,8};
 
-TableISBRepl::TableISBRepl(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list)
+TriageRepl::TriageRepl(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list)
     : entry_list(entry_list)
 {
 }
 
-TableISBRepl* TableISBRepl::create_repl(
-        std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list,
-        TableISBReplType repl_type, uint64_t assoc, bool use_dynamic_assoc)
+TriageRepl* TriageRepl::create_repl(
+        std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list,
+        TriageReplType repl_type, uint64_t assoc, bool use_dynamic_assoc)
 {
-    TableISBRepl *repl;
+    TriageRepl *repl;
     switch (repl_type) {
-        case TABLEISB_REPL_LRU:
-            repl = new TableISBReplLRU(entry_list);
+        case TRIAGE_REPL_LRU:
+            repl = new TriageReplLRU(entry_list);
             break;
-        case TABLEISB_REPL_HAWKEYE:
-            repl = new TableISBReplHawkeye(entry_list, assoc, use_dynamic_assoc);
+        case TRIAGE_REPL_HAWKEYE:
+            repl = new TriageReplHawkeye(entry_list, assoc, use_dynamic_assoc);
             break;
-        case TABLEISB_REPL_PERFECT:
-            repl = new TableISBReplPerfect(entry_list);
+        case TRIAGE_REPL_PERFECT:
+            repl = new TriageReplPerfect(entry_list);
             break;
         default:
             cerr << "Unknown repl type: " << repl_type <<endl;
@@ -45,18 +45,18 @@ TableISBRepl* TableISBRepl::create_repl(
     return repl;
 }
 
-TableISBReplLRU::TableISBReplLRU(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list)
-    : TableISBRepl(entry_list)
+TriageReplLRU::TriageReplLRU(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list)
+    : TriageRepl(entry_list)
 {
 }
 
-void TableISBReplLRU::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
+void TriageReplLRU::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
 {
-    map<uint64_t, TableISBOnchipEntry>& entry_map = (*entry_list)[set_id];
-    map<uint64_t, TableISBOnchipEntry>::iterator it = entry_map.find(addr);
+    map<uint64_t, TriageOnchipEntry>& entry_map = (*entry_list)[set_id];
+    map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.find(addr);
     assert(it != entry_map.end());
     // Lower RRPV is more recently used
-    for (map<uint64_t, TableISBOnchipEntry>::iterator jt = entry_map.begin();
+    for (map<uint64_t, TriageOnchipEntry>::iterator jt = entry_map.begin();
             jt != entry_map.end(); ++jt) {
         ++jt->second.rrpv;
     }
@@ -66,12 +66,12 @@ void TableISBReplLRU::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
         << ", addr: " << addr << endl;
 }
 
-uint64_t TableISBReplLRU::pickVictim(uint64_t set_id)
+uint64_t TriageReplLRU::pickVictim(uint64_t set_id)
 {
     unsigned max_ts = 0;
-    map<uint64_t, TableISBOnchipEntry>& entry_map = (*entry_list)[set_id];
-    map<uint64_t, TableISBOnchipEntry>::iterator max_it = entry_map.begin();
-    for (map<uint64_t, TableISBOnchipEntry>::iterator it = entry_map.begin();
+    map<uint64_t, TriageOnchipEntry>& entry_map = (*entry_list)[set_id];
+    map<uint64_t, TriageOnchipEntry>::iterator max_it = entry_map.begin();
+    for (map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.begin();
             it != entry_map.end(); ++it) {
         if (it->second.rrpv > max_ts) {
             max_ts = it->second.rrpv;
@@ -87,16 +87,16 @@ uint64_t TableISBReplLRU::pickVictim(uint64_t set_id)
     return addr;
 }
 
-TableISBReplHawkeye::TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list,
+TriageReplHawkeye::TriageReplHawkeye(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list,
         uint64_t assoc, bool use_dynamic_assoc)
-    : TableISBRepl(entry_list)
+    : TriageRepl(entry_list)
 {
     max_rrpv = 3;
     uint64_t num_sets = entry_list->size();
 //    optgen.resize(num_sets);
     optgen_mytimer.resize(num_sets);
     optgen_addr_history.clear();
-    cout << "Init TableISBReplHawkeye, assoc: " << assoc << ", use_dynamic_assoc: " << use_dynamic_assoc
+    cout << "Init TriageReplHawkeye, assoc: " << assoc << ", use_dynamic_assoc: " << use_dynamic_assoc
         << endl;
 
 //    for (size_t i = 0; i < num_sets; ++i) {
@@ -126,10 +126,10 @@ TableISBReplHawkeye::TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISB
 #define bits(x, i, l) (((x) >> (i)) & bitmask(l))
 #define SAMPLED_SET(set) true
 
-void TableISBReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
+void TriageReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
 {
     debug_cout << hex << "Hawkeye addEntry: set_id: " << set_id << ", addr: " << addr << ", pc: " << pc << endl;
-    map<uint64_t, TableISBOnchipEntry>& entry_map = (*entry_list)[set_id];
+    map<uint64_t, TriageOnchipEntry>& entry_map = (*entry_list)[set_id];
     if (use_dynamic) {
         if (curr_access_count - last_access_count > HAWKEYE_EPOCH_LENGTH) {
             choose_optgen();
@@ -199,13 +199,13 @@ void TableISBReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
     if (prediction) {
         hawkeye_pc_ps_hit_predictions[pc]++;
         bool saturated = false;
-        for(map<uint64_t, TableISBOnchipEntry>::iterator it = entry_map.begin();
+        for(map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.begin();
                 it != entry_map.end(); ++it) {
             if (it->second.rrpv >= max_rrpv-1)
                 saturated = true;
         }
         //Age all the cache-friendly  lines
-        for(map<uint64_t, TableISBOnchipEntry>::iterator it = entry_map.begin();
+        for(map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.begin();
                 it != entry_map.end(); ++it) {
             if (!saturated && it->second.rrpv < max_rrpv-1)
                 ++it->second.rrpv;
@@ -217,16 +217,16 @@ void TableISBReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
     debug_cout << "AddEntry after Entry Map size: " << entry_map.size() << endl;
 }
 
-uint64_t TableISBReplHawkeye::pickVictim(uint64_t set_id)
+uint64_t TriageReplHawkeye::pickVictim(uint64_t set_id)
 {
-    map<uint64_t, TableISBOnchipEntry>& entry_map = (*entry_list)[set_id];
+    map<uint64_t, TriageOnchipEntry>& entry_map = (*entry_list)[set_id];
     debug_cout << "PickVictim before Entry Map size: " << entry_map.size() << endl;
-    for(map<uint64_t, TableISBOnchipEntry>::iterator it = entry_map.begin();
+    for(map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.begin();
             it != entry_map.end(); ++it) {
         debug_cout << "entry_map[" << it->first << "] = " << it->second.rrpv
             << endl;
     }
-    for(map<uint64_t, TableISBOnchipEntry>::iterator it = entry_map.begin(); it != entry_map.end(); ++it) {
+    for(map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.begin(); it != entry_map.end(); ++it) {
         if (it->second.rrpv == max_rrpv) {
             uint64_t addr = it->first;
             return addr;
@@ -236,7 +236,7 @@ uint64_t TableISBReplHawkeye::pickVictim(uint64_t set_id)
     //If we cannot find a cache-averse line, we evict the oldest cache-friendly line
     uint32_t max_rrip = 0;
     uint64_t lru_victim = 0;
-    for(map<uint64_t, TableISBOnchipEntry>::iterator it = entry_map.begin();
+    for(map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.begin();
             it != entry_map.end(); ++it) {
         if (it->second.rrpv >= max_rrip)
         {
@@ -257,7 +257,7 @@ uint64_t TableISBReplHawkeye::pickVictim(uint64_t set_id)
 
 #define HAWKEYE_OPTGEN_THRESHOLD 0.05
 #define HAWKEYE_OPTGEN_THRESHOLD2 0.05
-void TableISBReplHawkeye::choose_optgen()
+void TriageReplHawkeye::choose_optgen()
 {
     double hit_rate[HAWKEYE_SAMPLE_ASSOC_COUNT];
     for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
@@ -283,7 +283,7 @@ void TableISBReplHawkeye::choose_optgen()
         << dynamic_optgen_choice << endl;
 }
 
-uint32_t TableISBReplHawkeye::get_assoc()
+uint32_t TriageReplHawkeye::get_assoc()
 {
     switch (dynamic_optgen_choice) {
         case 0:
@@ -298,7 +298,7 @@ uint32_t TableISBReplHawkeye::get_assoc()
     }
 }
 
-void TableISBReplHawkeye::print_stats()
+void TriageReplHawkeye::print_stats()
 {
     unsigned int hits = 0, access = 0, traffic = 0;
     /*
@@ -332,17 +332,17 @@ void TableISBReplHawkeye::print_stats()
     }
 }
 
-TableISBReplPerfect::TableISBReplPerfect(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list)
-    : TableISBRepl(entry_list)
+TriageReplPerfect::TriageReplPerfect(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list)
+    : TriageRepl(entry_list)
 {
 }
 
-void TableISBReplPerfect::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
+void TriageReplPerfect::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
 {
     // Don't do anything
 }
 
-uint64_t TableISBReplPerfect::pickVictim(uint64_t set_id)
+uint64_t TriageReplPerfect::pickVictim(uint64_t set_id)
 {
     // Don't do anything
     return 0;

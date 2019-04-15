@@ -1,14 +1,14 @@
 
 #include "cache.h"
-#include "tableisb.h"
+#include "triage.h"
 #include <map>
 
-//#define TABLEISB_FILL_LEVEL FILL_L2
-#define TABLEISB_FILL_LEVEL FILL_LLC
+//#define TRIAGE_FILL_LEVEL FILL_L2
+#define TRIAGE_FILL_LEVEL FILL_LLC
 #define MAX_ALLOWED_DEGREE 8
 
-TableISBConfig conf[NUM_CPUS];
-TableISB data[NUM_CPUS];
+TriageConfig conf[NUM_CPUS];
+Triage data[NUM_CPUS];
 uint64_t last_address[NUM_CPUS];
 
 std::set<uint64_t>unique_addr;
@@ -33,9 +33,9 @@ void CACHE::l2c_prefetcher_initialize()
     conf[cpu].on_chip_assoc = 8;
 //    conf[cpu].on_chip_assoc = 524288;
     conf[cpu].training_unit_size = 10000000;
-//    conf[cpu].repl = TABLEISB_REPL_LRU;
-//    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
-    conf[cpu].repl = TABLEISB_REPL_PERFECT;
+//    conf[cpu].repl = TRIAGE_REPL_LRU;
+//    conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
+    conf[cpu].repl = TRIAGE_REPL_PERFECT;
 //    conf[cpu].use_dynamic_assoc = true;
     conf[cpu].use_dynamic_assoc = false;
 
@@ -86,7 +86,7 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         if (!l2_hit && !llc_hit){
            ++actual_usage_count[addr]; 
         }
-        int ret = prefetch_line(pc, addr, prefetch_addr_list[i], TABLEISB_FILL_LEVEL, md_in);
+        int ret = prefetch_line(pc, addr, prefetch_addr_list[i], TRIAGE_FILL_LEVEL, md_in);
         if(ret)
         {
  //           cout << hex << addr << " " << prefetch_addr_list[i] << dec << endl;
@@ -103,10 +103,10 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         total_assoc += data[mycpu].get_assoc();
     }
     total_assoc /= NUM_CPUS;
-    // XXX: We only have everything in the same tableisb at the moment.
+    // XXX: We only have everything in the same triage at the moment.
 //    total_assoc = data[cpu].get_assoc();
     assert(total_assoc < LLC_WAY);
-    if (conf[cpu].repl != TABLEISB_REPL_PERFECT)
+    if (conf[cpu].repl != TRIAGE_REPL_PERFECT)
         static_cast<CACHE*>(lower_level)->current_assoc = LLC_WAY - total_assoc;
 
     //cout << total_assoc << " " << current_assoc << " " << data[cpu].get_assoc() << endl;
@@ -128,7 +128,7 @@ uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
 void CACHE::l2c_prefetcher_final_stats()
 {
  //   cpu = 0;
-    cout << "CPU " << cpu << " TABLEISB Stats:" << endl;
+    cout << "CPU " << cpu << " TRIAGE Stats:" << endl;
 
     data[cpu].print_stats();
 

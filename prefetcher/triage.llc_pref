@@ -1,14 +1,14 @@
 
 #include "cache.h"
 //#include "bo_percore.h"
-#include "tableisb.h"
+#include "triage.h"
 
-//#define TABLEISB_FILL_LEVEL FILL_L2
-#define TABLEISB_FILL_LEVEL FILL_LLC
+//#define TRIAGE_FILL_LEVEL FILL_L2
+#define TRIAGE_FILL_LEVEL FILL_LLC
 #define MAX_ALLOWED_DEGREE 8
 
-TableISBConfig conf[NUM_CPUS];
-TableISB data[NUM_CPUS];
+TriageConfig conf[NUM_CPUS];
+Triage data[NUM_CPUS];
 uint64_t last_address[NUM_CPUS];
 
 //16K entries = 64KB
@@ -29,9 +29,9 @@ void CACHE::llc_prefetcher_initialize()
     conf[cpu].on_chip_assoc = 8;
 //    conf[cpu].on_chip_assoc = 524288;
     conf[cpu].training_unit_size = 10000000;
-    conf[cpu].repl = TABLEISB_REPL_LRU;
-//    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
-//    conf[cpu].repl = TABLEISB_REPL_PERFECT;
+    conf[cpu].repl = TRIAGE_REPL_LRU;
+//    conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
+//    conf[cpu].repl = TRIAGE_REPL_PERFECT;
 //    conf[cpu].use_dynamic_assoc = true;
     conf[cpu].use_dynamic_assoc = false;
 
@@ -67,7 +67,7 @@ uint64_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         if (prefetch_addr_list[i] == 0) {
             break;
         }
-        int ret = prefetch_line(pc, addr, prefetch_addr_list[i], TABLEISB_FILL_LEVEL, addr);
+        int ret = prefetch_line(pc, addr, prefetch_addr_list[i], TRIAGE_FILL_LEVEL, addr);
         if(ret)
         {
             prefetched++;
@@ -86,7 +86,7 @@ uint64_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     }
     total_assoc /= NUM_CPUS;
     assert (total_assoc < LLC_WAY);
-    if (conf[cpu].repl != TABLEISB_REPL_PERFECT)
+    if (conf[cpu].repl != TRIAGE_REPL_PERFECT)
         current_assoc = LLC_WAY - total_assoc;
 
     return metadata_in;
@@ -106,7 +106,7 @@ uint64_t CACHE::llc_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
 void CACHE::llc_prefetcher_final_stats()
 {
     cpu = 0;
-    cout << "CPU " << cpu << " TABLEISB Stats:" << endl;
+    cout << "CPU " << cpu << " TRIAGE Stats:" << endl;
 
     data[cpu].print_stats();
 }
