@@ -13,7 +13,7 @@ unsigned int no_prediction;
 uint64_t addr_context[2];
 uint64_t pointer;
 
-#define HYBRID
+//#define HYBRID
 
 struct EIT_Entry
 {
