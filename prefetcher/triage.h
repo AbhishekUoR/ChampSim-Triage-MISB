@@ -1,15 +1,15 @@
-#ifndef __TABLEISB_H__
-#define __TABLEISB_H__
+#ifndef __TRIAGE_H__
+#define __TRIAGE_H__
 
 #include <iostream>
 #include <map>
 #include <vector>
 
 #include "inc/champsim.h"
-#include "tableisb_training_unit.h"
-#include "tableisb_onchip.h"
+#include "triage_training_unit.h"
+#include "triage_onchip.h"
 
-struct TableISBConfig {
+struct TriageConfig {
     int lookahead;
     int degree;
 
@@ -17,11 +17,11 @@ struct TableISBConfig {
     int training_unit_size;
     bool use_dynamic_assoc;
 
-    TableISBReplType repl;
+    TriageReplType repl;
 };
 
-class TableISB {
-    TableISBTrainingUnit training_unit;
+class Triage {
+    TriageTrainingUnit training_unit;
 
     int lookahead, degree;
 
@@ -37,9 +37,9 @@ class TableISB {
     std::vector<uint64_t> next_addr_list;
 
     public:
-    TableISBOnchip on_chip_data;
-        TableISB();
-        void set_conf(TableISBConfig *config);
+    TriageOnchip on_chip_data;
+        Triage();
+        void set_conf(TriageConfig *config);
         void calculatePrefetch(uint64_t pc, uint64_t addr,
                 bool cache_hit, uint64_t *prefetch_list,
                 int max_degree, uint64_t cpu);
@@ -47,4 +47,4 @@ class TableISB {
         uint32_t get_assoc();
 };
 
-#endif // __TABLEISB_H__
+#endif // __TRIAGE_H__

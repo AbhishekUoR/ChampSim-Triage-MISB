@@ -1,5 +1,5 @@
-#ifndef __TABLEISB_ONCHIP_H__
-#define __TABLEISB_ONCHIP_H__
+#ifndef __TRIAGE_ONCHIP_H__
+#define __TRIAGE_ONCHIP_H__
 
 #include <vector>
 #include <map>
@@ -12,15 +12,15 @@
 #define ONCHIP_LINE_SHIFT 0
 #define INVALID_ADDR 0xdeadbeef
 
-struct TableISBConfig;
+struct TriageConfig;
 
-enum TableISBReplType {
-    TABLEISB_REPL_LRU,
-    TABLEISB_REPL_HAWKEYE,
-    TABLEISB_REPL_PERFECT
+enum TriageReplType {
+    TRIAGE_REPL_LRU,
+    TRIAGE_REPL_HAWKEYE,
+    TRIAGE_REPL_PERFECT
 };
 
-struct TableISBOnchipEntry {
+struct TriageOnchipEntry {
     uint64_t next_addr[ONCHIP_LINE_SIZE];
     int confidence[ONCHIP_LINE_SIZE];
     bool valid[ONCHIP_LINE_SIZE];
@@ -28,32 +28,32 @@ struct TableISBOnchipEntry {
     // policies, but can be used for other usages (like frequency in LFU）
     uint64_t rrpv;
 
-    TableISBOnchipEntry();
+    TriageOnchipEntry();
     void increase_confidence(unsigned);
     void decrease_confidence(unsigned);
     void init();
 };
 
-class TableISBRepl {
+class TriageRepl {
     protected:
-        std::vector<std::map<uint64_t, TableISBOnchipEntry> > *entry_list;
-        TableISBReplType type;
+        std::vector<std::map<uint64_t, TriageOnchipEntry> > *entry_list;
+        TriageReplType type;
 
     public:
-        TableISBRepl(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list);
+        TriageRepl(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list);
         virtual void addEntry(uint64_t set_id, uint64_t addr, uint64_t pc) = 0;
         virtual uint64_t pickVictim(uint64_t set_id) = 0;
         virtual void print_stats() {}
         virtual uint32_t get_assoc() { return 8; }
 
-        static TableISBRepl* create_repl(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list,
-                TableISBReplType type, uint64_t assoc, bool use_dynamic_assoc);
+        static TriageRepl* create_repl(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list,
+                TriageReplType type, uint64_t assoc, bool use_dynamic_assoc);
 };
 
-class TableISBReplLRU : public TableISBRepl
+class TriageReplLRU : public TriageRepl
 {
     public:
-        TableISBReplLRU(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list);
+        TriageReplLRU(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list);
         void addEntry(uint64_t set_id, uint64_t addr, uint64_t pc);
         uint64_t pickVictim(uint64_t set_id);
 };
@@ -63,7 +63,7 @@ class TableISBReplLRU : public TableISBRepl
 #define HAWKEYE_SAMPLE_ASSOC_COUNT 2
 #define HAWKEYE_EPOCH_LENGTH 1000
 extern unsigned hawkeye_sample_assoc[];
-class TableISBReplHawkeye : public TableISBRepl
+class TriageReplHawkeye : public TriageRepl
 {
     unsigned max_rrpv;
     std::vector<uint64_t> optgen_mytimer;
@@ -81,7 +81,7 @@ class TableISBReplHawkeye : public TableISBRepl
     void choose_optgen();
 
     public:
-        TableISBReplHawkeye(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list, uint64_t assoc, bool use_dynamic_assoc);
+        TriageReplHawkeye(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list, uint64_t assoc, bool use_dynamic_assoc);
         void addEntry(uint64_t set_id, uint64_t addr, uint64_t pc);
         uint64_t pickVictim(uint64_t set_id);
         uint32_t get_assoc();
@@ -89,28 +89,28 @@ class TableISBReplHawkeye : public TableISBRepl
         void print_stats();
 };
 
-class TableISBReplPerfect : public TableISBRepl
+class TriageReplPerfect : public TriageRepl
 {
     public:
-        TableISBReplPerfect(std::vector<std::map<uint64_t, TableISBOnchipEntry> >* entry_list);
+        TriageReplPerfect(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list);
         void addEntry(uint64_t set_id, uint64_t addr, uint64_t pc);
         uint64_t pickVictim(uint64_t set_id);
 };
 
-class TableISBOnchip {
+class TriageOnchip {
     uint32_t num_sets, assoc;
     uint64_t index_mask;
-    std::vector<std::map<uint64_t, TableISBOnchipEntry> > entry_list;
-    TableISBReplType repl_type;
-    TableISBRepl *repl;
+    std::vector<std::map<uint64_t, TriageOnchipEntry> > entry_list;
+    TriageReplType repl_type;
+    TriageRepl *repl;
     bool use_dynamic_assoc;
 
     uint64_t get_set_id(uint64_t addr);
     uint64_t get_line_offset(uint64_t addr);
 
     public:
-        TableISBOnchip();
-        void set_conf(TableISBConfig *config);
+        TriageOnchip();
+        void set_conf(TriageConfig *config);
 
         void update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl);
         bool get_next_addr(uint64_t prev_addr, uint64_t &next_addr, uint64_t pc, bool update_stats);
@@ -121,5 +121,5 @@ class TableISBOnchip {
         uint32_t get_assoc();
 };
 
-#endif // __TABLEISB_ONCHIP_H__
+#endif // __TRIAGE_ONCHIP_H__
 
