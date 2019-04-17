@@ -15,7 +15,8 @@ uint64_t last_address[NUM_CPUS];
 void CACHE::llc_prefetcher_initialize()
 {
     cout << NUM_CPUS << endl;
-    cpu = 0;
+//    cpu = 0;
+    for(uint32_t cpu=0; cpu < NUM_CPUS; cpu++) {
     conf[cpu].lookahead = 1;
     conf[cpu].degree = 1;
 //    conf[cpu].on_chip_size = 4096;
@@ -29,18 +30,19 @@ void CACHE::llc_prefetcher_initialize()
     conf[cpu].on_chip_assoc = 8;
 //    conf[cpu].on_chip_assoc = 524288;
     conf[cpu].training_unit_size = 10000000;
-    conf[cpu].repl = TRIAGE_REPL_LRU;
-//    conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
-//    conf[cpu].repl = TRIAGE_REPL_PERFECT;
-//    conf[cpu].use_dynamic_assoc = true;
-    conf[cpu].use_dynamic_assoc = false;
+//    conf[cpu].repl = TABLEISB_REPL_LRU;
+    conf[cpu].repl = TABLEISB_REPL_HAWKEYE;
+//    conf[cpu].repl = TABLEISB_REPL_PERFECT;
+    conf[cpu].use_dynamic_assoc = true;
+//    conf[cpu].use_dynamic_assoc = false;
 
     data[cpu].set_conf(&conf[cpu]);
+    }
 }
 
 uint64_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
 {
-    cpu = 0;
+    //cpu = 0;
     if (type != LOAD) {
         return metadata_in;
     }
@@ -60,7 +62,7 @@ uint64_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         prefetch_addr_list[i] = 0;
     }
     data[cpu].calculatePrefetch(pc, addr, cache_hit, prefetch_addr_list,
-            MAX_ALLOWED_DEGREE);
+            MAX_ALLOWED_DEGREE, cpu);
 
     int prefetched = 0;
     for (i = 0; i < MAX_ALLOWED_DEGREE; ++i) {
@@ -94,9 +96,10 @@ uint64_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
 
 uint64_t CACHE::llc_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint64_t metadata_in)
 {
+    //cpu = 0;
     if(prefetch) {
         uint64_t next_addr;
-        bool next_addr_exists = data[0].on_chip_data.get_next_addr(metadata_in, next_addr, 0, true);
+        bool next_addr_exists = data[cpu].on_chip_data.get_next_addr(metadata_in, next_addr, 0, true);
         //assert(next_addr_exists);
         //cout << "Filled " << hex << addr << "  by " << metadata_in << endl;
     }
@@ -105,10 +108,12 @@ uint64_t CACHE::llc_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
 
 void CACHE::llc_prefetcher_final_stats()
 {
-    cpu = 0;
-    cout << "CPU " << cpu << " TRIAGE Stats:" << endl;
+    //cpu = 0;
+    for(uint32_t cpu=0; cpu < NUM_CPUS; cpu++) {
+        cout << "CPU " << cpu << " TRIAGE Stats:" << endl;
 
-    data[cpu].print_stats();
+        data[cpu].print_stats();
+    }
 }
 
 

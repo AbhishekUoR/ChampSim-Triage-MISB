@@ -322,7 +322,7 @@ void BO_STATE::os_learn_best_offset(t_addr lineaddr)
 void bo_l2c_prefetcher_initialize() 
 {
     //The prefetcher is initialized for each core separately
-    for(unsigned int cpu=0; cpu<1; cpu++)
+    for(unsigned int cpu=0; cpu<NUM_CPUS; cpu++)
     {
         bo[cpu].prefetch_offset = DEFAULT_OFFSET;
         bo[cpu].rr_init();
