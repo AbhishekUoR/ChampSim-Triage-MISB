@@ -14,7 +14,6 @@ echo $sc_baseline
 
 average=1.0
 count=`ls -lh $baseline/*.txt | wc -l`
-count=100
 echo $count
 
 dir=$(dirname "$0")

@@ -23,9 +23,9 @@ do
 #      output_dir="/scratch/cluster/akanksha/CRCRealOutput/4coreCRC/NP/$output/"
 #      output_dir="/scratch/cluster/akanksha/CRCRealOutput/4coreCRC/NP_4.5/$output/"
 #    output_dir="/scratch/cluster/akanksha/CRCRealOutput/4coreCRC/BO/$output/"
-#      output_dir="/scratch/cluster/haowu/isb-meta/tisb-output-4core-regular/$output/"
-      output_dir="/scratch/cluster/haowu/isb-meta/tisb-output-4core-irregular/$output/"
-#      output_dir="/scratch/cluster/haowu/isb-meta/tisb-output-4core-mix/$output/"
+#      output_dir="/scratch/cluster/haowu/isb-meta/triage-output-4core-regular/$output/"
+      output_dir="/scratch/cluster/haowu/isb-meta/triage-output-4core-irregular/$output/"
+#      output_dir="/scratch/cluster/haowu/isb-meta/triage-output-4core-mix/$output/"
     if [ ! -e "$output_dir" ] ; then
         mkdir $output_dir
         mkdir "$output_dir/scripts"

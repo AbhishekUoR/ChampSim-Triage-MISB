@@ -341,7 +341,7 @@ void bo_l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, ui
 
     bo[cpu].dq_pop();
 
-    if (! l2_hit ) {
+//    if (! l2_hit ) {
         bo[cpu].os_learn_best_offset(lineaddr);
         //prefetch_issued = issue_prefetch(lineaddr,prefetch_offset);
 
@@ -356,8 +356,9 @@ void bo_l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, ui
 
         *trigger_addr = lineaddr;
         //*target_addr = lineaddr+offset;
+        //cout << offset << endl;
         *target_offset = offset;
-    }
+//    }
 }
 
 

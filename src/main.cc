@@ -527,9 +527,9 @@ int main(int argc, char** argv)
     cout << "LLC ways: " << LLC_WAY << endl;
 
     if (knob_low_bandwidth)
-        DRAM_MTPS = DRAM_IO_FREQ/4;
+        DRAM_MTPS = 800;
     else
-        DRAM_MTPS = DRAM_IO_FREQ;
+        DRAM_MTPS = 4000;
 
     // DRAM access latency
     tRP  = tRP_DRAM_CYCLE  * (CPU_FREQ / DRAM_IO_FREQ); 

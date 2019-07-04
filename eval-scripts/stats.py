@@ -187,8 +187,8 @@ class Stats:
                 print(filepath, "does not exist")
 
         for benchmark in benchmark_list:
-#            res = re.match("([a-zA-Z0-9]*)_([a-zA-Z0-9]*)", benchmark)
-            res = re.match("([a-zA-Z0-9._]*)-([0-9]*)B", benchmark)
+            res = re.match("([a-zA-Z0-9]*)_([a-zA-Z0-9]*)", benchmark)
+#            res = re.match("([a-zA-Z0-9._]*)-([0-9]*)B", benchmark)
             acc_benchmark = res.group(1)
             if acc_benchmark not in self.acc_benchmark_list:
                 self.acc_benchmark_list.append(acc_benchmark)

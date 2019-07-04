@@ -94,8 +94,8 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     if (type != LOAD)
         return metadata_in;
 
-    if(cache_hit)
-        return metadata_in;
+//    if(cache_hit)
+//        return metadata_in;
 
      uint64_t addr_B = (addr >> 6) << 6;
 

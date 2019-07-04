@@ -19,7 +19,7 @@ do
     trace_file=$benchmark
     echo $f $benchmark 
 
-    output_dir="/scratch/cluster/haowu/isb-meta/tisb-output-cloudsuite/$output/"
+    output_dir="/scratch/cluster/haowu/isb-meta/triage-output-cloudsuite-lru-6.4gb/$output/"
 
     if [ ! -e "$output_dir" ] ; then
         mkdir $output_dir

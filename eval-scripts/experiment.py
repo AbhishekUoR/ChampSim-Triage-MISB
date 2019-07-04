@@ -29,8 +29,8 @@ class Experiment:
         if not os.path.exists(self.expr_dir + "/scripts"):
             os.mkdir(self.expr_dir + "/scripts")
         condor_script_path = "{0}/scripts/{1}.condor".format(self.expr_dir, benchmark)
-#        command = "{0} -warmup_instructions {1} -simulation_instructions {2} -hide_heartbeat -traces {3}/{4}.trace.gz >& {5}/{4}.stats".format(
-        command = "{0} -warmup_instructions {1} -simulation_instructions {2} -hide_heartbeat -traces {3}/{4}.champsimtrace.xz >& {5}/{4}.stats".format(
+        command = "{0} -warmup_instructions {1} -simulation_instructions {2} -hide_heartbeat -traces {3}/{4}.trace.gz >& {5}/{4}.stats".format(
+#        command = "{0} -warmup_instructions {1} -simulation_instructions {2} -hide_heartbeat -traces {3}/{4}.champsimtrace.xz >& {5}/{4}.stats".format(
             self.binary_path, self.warmup_insns, self.simulation_insns,
             self.trace_dir, benchmark, self.expr_dir)
         subprocess.call(['condor_shell',

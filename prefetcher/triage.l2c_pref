@@ -3,8 +3,8 @@
 #include "triage.h"
 #include <map>
 
-//#define TRIAGE_FILL_LEVEL FILL_L2
-#define TRIAGE_FILL_LEVEL FILL_LLC
+#define TRIAGE_FILL_LEVEL FILL_L2
+//#define TRIAGE_FILL_LEVEL FILL_LLC
 #define MAX_ALLOWED_DEGREE 8
 
 TriageConfig conf[NUM_CPUS];
@@ -36,8 +36,8 @@ void CACHE::l2c_prefetcher_initialize()
 //    conf[cpu].repl = TRIAGE_REPL_LRU;
     conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
 //    conf[cpu].repl = TRIAGE_REPL_PERFECT;
-    conf[cpu].use_dynamic_assoc = true;
-//    conf[cpu].use_dynamic_assoc = false;
+//    conf[cpu].use_dynamic_assoc = true;
+    conf[cpu].use_dynamic_assoc = false;
 
     data[cpu].set_conf(&conf[cpu]);
 }
@@ -106,8 +106,8 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     // XXX: We only have everything in the same triage at the moment.
 //    total_assoc = data[cpu].get_assoc();
     assert(total_assoc < LLC_WAY);
-    if (conf[cpu].repl != TRIAGE_REPL_PERFECT)
-        static_cast<CACHE*>(lower_level)->current_assoc = LLC_WAY - total_assoc;
+//    if (conf[cpu].repl != TRIAGE_REPL_PERFECT)
+//        static_cast<CACHE*>(lower_level)->current_assoc = LLC_WAY - total_assoc;
 
     //cout << total_assoc << " " << current_assoc << " " << data[cpu].get_assoc() << endl;
     return metadata_in;

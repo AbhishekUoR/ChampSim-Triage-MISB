@@ -18,7 +18,7 @@ count=100
 echo $count
 
 dir=$(dirname "$0")
-for i in `seq 1 100`;
+for i in `seq 1 50`;
 do
     baseline_file="$baseline/mix""$i.txt"
     dut_file="$dut/mix""$i.txt"
