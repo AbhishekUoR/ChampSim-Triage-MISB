@@ -31,7 +31,7 @@ using namespace std;
 
 typedef long long t_addr;
 #define NOFFSETS 46
-int OFFSET[NOFFSETS] = {1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10,11,-11,12,-12,13,-13,14,-14,15,-15,16,-16,18,-18,20,-20,24,-24,30,-30,32,-32,36,-36,40,-40};
+const int OFFSET[NOFFSETS] = {1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10,11,-11,12,-12,13,-13,14,-14,15,-15,16,-16,18,-18,20,-20,24,-24,30,-30,32,-32,36,-36,40,-40};
 #define DEFAULT_OFFSET 1
 #define SCORE_MAX 31
 #define ROUND_MAX 100
@@ -362,8 +362,13 @@ void bo_l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, ui
 }
 
 
-void bo_issue_prefetcher(CACHE* cache, uint64_t ip, uint64_t trigger_addr, uint64_t target_addr, int level) {
-    cache->prefetch_line(ip , trigger_addr<<LOGLINE, target_addr<<LOGLINE, level, 0);
+void bo_issue_prefetcher(CACHE* cache, uint64_t ip, uint64_t trigger_addr, uint64_t target_addr, int level, bool pf_cross_page = true) {
+//    cout << "prefetch line: " << ip << ' ' << trigger_addr << ' '  << target_addr << ' ' << level
+//        << ' ' << cache->cpu << endl;
+        //if ((base_addr>>LOG2_PAGE_SIZE) == (pf_addr>>LOG2_PAGE_SIZE)) {
+    if (pf_cross_page || trigger_addr>>(LOG2_PAGE_SIZE-LOGLINE) == target_addr>>(LOG2_PAGE_SIZE-LOGLINE)) {
+        cache->prefetch_line(ip , trigger_addr<<LOGLINE, target_addr<<LOGLINE, level, 0);
+    }
 }
 
 

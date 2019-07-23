@@ -1,5 +1,9 @@
 #include "dram_controller.h"
 
+//#define DEBUG_PRINT
+//#undef DP
+//#define DP(x) x
+
 // initialized in main.cc
 uint32_t DRAM_MTPS, DRAM_DBUS_RETURN_TIME,
          tRP, tRCD, tCAS;
