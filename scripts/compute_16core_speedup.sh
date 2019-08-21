@@ -24,22 +24,22 @@ do
     
     #echo "$baseline_file $dut_file"
 
-    trace0=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $1}'`
-    trace1=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $2}'`
-    trace2=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $3}'`
-    trace3=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $4}'`
-    trace4=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $5}'`
-    trace5=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $6}'`
-    trace6=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $7}'`
-    trace7=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $8}'`
-    trace8=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $9}'`
-    trace9=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $10}'`
-    trace10=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $11}'`
-    trace11=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $12}'`
-    trace12=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $13}'`
-    trace13=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $14}'`
-    trace14=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $15}'`
-    trace15=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim/sim_list/8core_workloads.txt | awk '{print $16}'`
+    trace0=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $1}'`
+    trace1=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $2}'`
+    trace2=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $3}'`
+    trace3=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $4}'`
+    trace4=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $5}'`
+    trace5=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $6}'`
+    trace6=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $7}'`
+    trace7=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $8}'`
+    trace8=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $9}'`
+    trace9=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $10}'`
+    trace10=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $11}'`
+    trace11=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $12}'`
+    trace12=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $13}'`
+    trace13=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $14}'`
+    trace14=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $15}'`
+    trace15=`sed -n ''$i'p' /scratch/cluster/haowu/isb-meta/ChampSim_DPC3/sim_list/16core_workloads.txt | awk '{print $16}'`
 
     sc_file0="$sc_baseline/$trace0"".stats"
     sc_file1="$sc_baseline/$trace1"".stats"

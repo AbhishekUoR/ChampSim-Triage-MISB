@@ -47,7 +47,7 @@ TriageOnchip::TriageOnchip()
 void TriageOnchip::set_conf(TriageConfig *config)
 {
     assoc = config->on_chip_assoc;
-    num_sets = config->on_chip_size / assoc;
+    num_sets = config->on_chip_set;
     num_sets = num_sets >> ONCHIP_LINE_SHIFT;
     repl_type = config->repl;
     index_mask = num_sets - 1;
@@ -115,12 +115,21 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
         << ", next_addr: " << next_addr
         << ", set_id: " << set_id
         << ", tag: " << tag
+        << ", assoc: " << assoc
+        << ", entry map size: " << entry_map.size()
         << ", pc: " << pc
         << endl;
 
     if (it != entry_map.end()) {
-        it->second.next_addr[line_offset] = next_addr;
-        it->second.valid[line_offset] = true;
+        while (repl_type != TRIAGE_REPL_PERFECT && entry_map.size() > assoc && entry_map.size() > 0) {
+            uint64_t victim_addr = repl->pickVictim(set_id);
+            assert(entry_map.count(victim_addr));
+            entry_map.erase(victim_addr);
+        }
+        if (assoc > 0) {
+            it->second.next_addr[line_offset] = next_addr;
+            it->second.valid[line_offset] = true;
+        }
         if(update_repl)
             repl->addEntry(set_id, tag, pc);
     } else {
@@ -129,6 +138,7 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
             assert(entry_map.count(victim_addr));
             entry_map.erase(victim_addr);
         }
+        debug_cout << "entry_map_size A: " << entry_map.size() << endl;
         assert(!entry_map.count(tag));
         if (assoc > 0) {
             entry_map[tag].init();
@@ -136,8 +146,20 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
             entry_map[tag].confidence[line_offset] = 3;
             entry_map[tag].valid[line_offset] = true;
         }
+        debug_cout << "entry_map_size B: " << entry_map.size() << endl;
         repl->addEntry(set_id, tag, pc);
     }
+
+    debug_cout << hex << "after update prev_addr: " << prev_addr
+        << ", next_addr: " << next_addr
+        << ", set_id: " << set_id
+        << ", tag: " << tag
+        << ", assoc: " << assoc
+        << ", entry map size: " << entry_map.size()
+        << ", pc: " << pc
+        << endl;
+
+    assert(entry_map.size() <= assoc);
 }
 
 bool TriageOnchip::get_next_addr(uint64_t prev_addr, uint64_t &next_addr,

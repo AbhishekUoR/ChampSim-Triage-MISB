@@ -19,22 +19,19 @@ void CACHE::l2c_prefetcher_initialize() {
 	bo_l2c_prefetcher_initialize();
     conf[cpu].lookahead = 1;
     conf[cpu].degree = 1;
-//    conf[cpu].on_chip_size = 4096;
-//    conf[cpu].on_chip_size = 8192;
-//    conf[cpu].on_chip_size = 16384;  //64K
-//    conf[cpu].on_chip_size = 32768;  //128KB
-//    conf[cpu].on_chip_size = 65536;  //256KB
-//    conf[cpu].on_chip_size = 131072; //512KB
-    conf[cpu].on_chip_size = 262144; //1MB
-//    conf[cpu].on_chip_size = 524288;  //2MB
     conf[cpu].on_chip_assoc = 8;
-//    conf[cpu].on_chip_assoc = 524288;
     conf[cpu].training_unit_size = 10000000;
 //    conf[cpu].repl = TRIAGE_REPL_LRU;
     conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
 //    conf[cpu].repl = TRIAGE_REPL_PERFECT;
     conf[cpu].use_dynamic_assoc = true;
 //    conf[cpu].use_dynamic_assoc = false;
+    int assoc_config = ASSOC_CONFIG;
+    int assoc = (assoc_config>>cpu) & 1;
+    conf[cpu].on_chip_assoc = assoc?8:0;
+    conf[cpu].on_chip_set = 32768;
+    std::cout << "ASSOC_CONFIG: " << ASSOC_CONFIG << std::endl;
+    std::cout << "CPU " << cpu << " assoc: " << conf[cpu].on_chip_assoc << std::endl;
 
     data[cpu].set_conf(&conf[cpu]);
 }

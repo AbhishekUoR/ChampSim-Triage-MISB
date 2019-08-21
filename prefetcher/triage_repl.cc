@@ -210,9 +210,13 @@ void TriageReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
             if (!saturated && it->second.rrpv < max_rrpv-1)
                 ++it->second.rrpv;
         }
-        entry_map[addr].rrpv = 0;
+        if (entry_map.count(addr)) {
+            entry_map[addr].rrpv = 0;
+        }
     } else {
-        entry_map[addr].rrpv = max_rrpv;
+        if (entry_map.count(addr)) {
+            entry_map[addr].rrpv = max_rrpv;
+        }
     }
     debug_cout << "AddEntry after Entry Map size: " << entry_map.size() << endl;
 }

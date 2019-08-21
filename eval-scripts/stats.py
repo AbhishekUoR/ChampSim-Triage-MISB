@@ -57,6 +57,11 @@ class Stat:
                 if res != None:
                     stat['optgen_hit_rate'] = float(res.group(4))
 
+                res = re.match('SAMPLEOPTGEN 1 accesses: (\d+), hits: (\d+), traffic: (\d+), hit rate: (\d+(\.\d+))', line)
+                if res != None:
+                    print(res.group(4))
+                    stat['sample_optgen_hit_rate'] = float(res.group(4))
+
                 res = re.match('total_assoc=(\d+)', line)
                 if res != None:
                     stat['triage_total_assoc'] = int(res.group(1))
@@ -128,6 +133,9 @@ class Stat:
             stat['triage_optgen_hit_rate'] = stat['optgen_hit_rate']
         except:
             None
+
+        if 'sample_optgen_hit_rate' not in stat:
+            stat['sample_optgen_hit_rate'] = 0.0
 
         stat['triage_average_assoc'] = 0.0
         try:

@@ -6,9 +6,9 @@ objDir = obj
 binDir = bin
 inc = inc
 
-debug = 1
+debug = 0
 
-CFlags = -Wall -O0 -std=c++11
+CFlags = $(CFLAGS) -Wall -O3 -std=c++11
 LDFlags =
 libs =
 libDir =
@@ -48,7 +48,7 @@ $(binDir)/$(app): buildrepo $(objects)
 $(objDir)/%.o: %.$(srcExt)
 	@echo "Generating dependencies for $<..."
 	@$(call make-depend,$<,$@,$(subst .o,.d,$@))
-	@echo "Compiling $<..."
+	@echo "Compiling $(CFlags) $<..."
 	@$(CC) $(CFlags) $< -o $@
 
 clean:
