@@ -553,7 +553,7 @@ void OnChipInfo::evict_ps_lru(unsigned ps_setId)
             {
                 uint64_t paddr = ((ps_iter->first << PS_METADATA_LINE_SHIFT) + i) << 6;
                 off_chip_info->update(paddr, ps_iter->second->str_addr[i]);
-                cout << "Evict " << hex << paddr << dec<< endl;
+                debug_cout << "Evict " << hex << paddr << dec<< endl;
 #ifdef BLOOM_ISB
 #ifdef BLOOM_ISB_TRAFFIC_DEBUG
                 printf("Bloom add b: 0x%lx\n", ps_iter->first);

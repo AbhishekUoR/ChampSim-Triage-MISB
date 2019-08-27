@@ -1226,6 +1226,49 @@ int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int 
     return 0;
 }
 
+int CACHE::get_metadata(uint64_t meta_data_addr)//, uint32_t str_addr, uint8_t type)
+{
+    //assert(0);
+    // static const unsigned long long crcPolynomial = 3988292384ULL;
+    // unsigned long long meta_data_addr = (phy_addr >> 10);
+    //for( unsigned int i = 0; i < 32; i++ )
+    //   meta_data_addr = ( ( meta_data_addr & 1 ) == 1 ) ? ( ( meta_data_addr >> 1 ) ^ crcPolynomial ) : ( meta_data_addr >> 1 );
+
+    //cout << "CACHE: " << cpu << " " << hex << meta_data_addr << dec << endl;
+    PACKET pf_packet;
+    pf_packet.fill_level = FILL_LLC;
+    pf_packet.cpu = cpu;
+    pf_packet.address = meta_data_addr;
+    pf_packet.full_addr = meta_data_addr;
+    pf_packet.ip = 0;
+    pf_packet.type = METADATA;
+    pf_packet.event_cycle = current_core_cycle[cpu];
+
+    // give a dummy 0 as the IP of a prefetch
+    //assert(extra_interface != NULL);
+    //extra_interface->add_pq(&pf_packet);
+    lower_level->add_pq(&pf_packet);
+
+    return 1;
+}
+
+int CACHE::write_metadata(uint64_t meta_data_addr)
+{
+    //cout << "WRITE MD: " << cpu << " " << hex << meta_data_addr << dec << endl;
+    PACKET wb_packet;
+    wb_packet.fill_level = FILL_DRAM; 
+    wb_packet.cpu = cpu;
+    wb_packet.address = meta_data_addr;
+    wb_packet.full_addr = meta_data_addr;
+    wb_packet.ip = 0;
+    wb_packet.type = METADATA;
+    wb_packet.event_cycle = current_core_cycle[cpu];
+
+    lower_level->add_wq(&wb_packet);
+
+    return 1;
+}
+
 int CACHE::kpc_prefetch_line(uint64_t base_addr, uint64_t pf_addr, int pf_fill_level, int delta, int depth, int signature, int confidence, uint64_t prefetch_metadata)
 {
     if (PQ.occupancy < PQ.SIZE) {

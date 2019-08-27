@@ -43,13 +43,13 @@ void CACHE::l2c_prefetcher_initialize()
 //    conf[cpu]->amc_assoc = 1024;
     //conf[cpu]->repl_policy = ISB_REPL_TYPE_LRU; // LRU
 //    conf[cpu]->repl_policy = ISB_REPL_TYPE_TLBSYNC; // METAPREF
-//    conf[cpu]->repl_policy = ISB_REPL_TYPE_BULKMETAPREF; // METAPREF
+    conf[cpu]->repl_policy = ISB_REPL_TYPE_BULKMETAPREF; // METAPREF
 //    conf[cpu]->repl_policy = ISB_REPL_TYPE_SRRIP; // SRRIP
 //    conf[cpu]->repl_policy = ISB_REPL_TYPE_BRRIP; // BRRIP
 //    conf[cpu]->repl_policy = ISB_REPL_TYPE_DRRIP; // DRRIP
 //    conf[cpu]->repl_policy = ISB_REPL_TYPE_HAWKEYE; // HAWKEYE
 //    conf[cpu]->repl_policy = ISB_REPL_TYPE_OPTGEN; // OPTGEN
-    conf[cpu]->repl_policy = ISB_REPL_TYPE_PERFECT; // IDEAL
+//    conf[cpu]->repl_policy = ISB_REPL_TYPE_PERFECT; // IDEAL
     conf[cpu]->amc_repl_region_size = 16;
     conf[cpu]->amc_repl_log_region_size = 4;
     conf[cpu]->amc_metapref_degree = 1;
@@ -59,8 +59,8 @@ void CACHE::l2c_prefetcher_initialize()
 //    conf[cpu]->prefetch_buffer_size = 0;
     conf[cpu]->check_bandwidth = true;
     conf[cpu]->isb_off_chip_ideal = false;
-//    conf[cpu]->isb_off_chip_writeback = true;
-    conf[cpu]->isb_off_chip_writeback = false;
+    conf[cpu]->isb_off_chip_writeback = true;
+//    conf[cpu]->isb_off_chip_writeback = false;
     conf[cpu]->count_off_chip_write_traffic = true;
 //    conf[cpu]->count_off_chip_write_traffic = false;
     conf[cpu]->isb_off_chip_latency = 170;
@@ -91,8 +91,8 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     if (type != LOAD)
         return metadata_in;
 
-//    if(ISB_FILL_LEVEL==FILL_LLC && cache_hit)
-//        return metadata_in;
+    if(ISB_FILL_LEVEL==FILL_LLC && cache_hit)
+        return metadata_in;
 #if 0
     if (llc_hit_type == LLC_MISS) {
         ++llc_miss_count;
