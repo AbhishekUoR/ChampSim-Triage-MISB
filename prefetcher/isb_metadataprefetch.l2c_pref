@@ -69,7 +69,6 @@ void CACHE::l2c_prefetcher_initialize()
     conf[cpu]->bloom_region_shift_bits = 0;
     conf[cpu]->bloom_capacity = 100000;
     conf[cpu]->bloom_fprate = 0.50;
-    conf[cpu]->bloom_reset_insns = 30000000;
 
     data[cpu] = new IsbPrefetcher(conf[cpu]);
 
@@ -166,7 +165,6 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         }
     }
 
-#ifndef NO_META_LATENCY
     for(auto it=data[cpu]->metadata_read_requests.begin(); it != data[cpu]->metadata_read_requests.end(); it++)
     {
         //cout << "ISB: " << hex << data[cpu]->metadata_requests[i].phy_addr << " " << data[cpu]->metadata_requests[i].str_addr << dec << endl;
@@ -178,11 +176,8 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         //cout << "ISB: " << hex << data[cpu]->metadata_requests[i].phy_addr << " " << data[cpu]->metadata_requests[i].str_addr << dec << endl;
         write_metadata(*it);
     }
-#endif
-
 
     return metadata_in;
-
 }
 
 uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint64_t metadata_in)
@@ -191,6 +186,41 @@ uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
     bo_l2c_prefetcher_cache_fill(addr, set, way, prefetch, evicted_addr, this, 0);
 #endif
     return metadata_in;
+}
+
+void CACHE::complete_metadata_req(uint64_t meta_data_addr)
+{
+    data[cpu]->prefetch_list.clear();
+    data[cpu]->metadata_read_requests.clear();
+    data[cpu]->metadata_write_requests.clear();
+
+
+    data[cpu]->complete_metadata_req(meta_data_addr);
+
+
+    uint64_t prefetched = 0;
+    for (uint32_t i = 0; i < data[cpu]->prefetch_list.size(); ++i) {
+        //cout << "[PF Buffer] " << hex << data[cpu]->prefetch_list[i] << dec << endl;
+        int ret = prefetch_line(0, 0, data[cpu]->prefetch_list[i], FILL_L2, 0);
+        if(ret)
+        {
+            prefetched++;
+            //if(prefetched >= degree)
+            //   break;
+        }
+    }
+
+    for(auto it=data[cpu]->metadata_read_requests.begin(); it != data[cpu]->metadata_read_requests.end(); it++)
+    {
+        //cout << "ISB: " << hex << data[cpu]->metadata_requests[i].phy_addr << " " << data[cpu]->metadata_requests[i].str_addr << dec << endl;
+        get_metadata(*it);
+    }
+
+    for(auto it=data[cpu]->metadata_write_requests.begin(); it != data[cpu]->metadata_write_requests.end(); it++)
+    {
+        //cout << "ISB: " << hex << data[cpu]->metadata_requests[i].phy_addr << " " << data[cpu]->metadata_requests[i].str_addr << dec << endl;
+        write_metadata(*it);
+    }
 }
 
 void CACHE::l2c_prefetcher_final_stats()

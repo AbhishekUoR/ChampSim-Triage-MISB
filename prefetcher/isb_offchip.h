@@ -12,16 +12,10 @@ typedef enum isb_repl_type_e {
     ISB_REPL_TYPE_LFU,
     ISB_REPL_TYPE_BULKLRU,
     ISB_REPL_TYPE_BULKMETAPREF,
-    ISB_REPL_TYPE_SRRIP,
-    ISB_REPL_TYPE_BRRIP,
-    ISB_REPL_TYPE_DRRIP,
-    ISB_REPL_TYPE_SHIP,
-    ISB_REPL_TYPE_HAWKEYE,
     ISB_REPL_TYPE_TLBSYNC,
     ISB_REPL_TYPE_METAPREF,
     ISB_REPL_TYPE_TLBSYNC_METAPREF,
     ISB_REPL_TYPE_TLBSYNC_BULKMETAPREF,
-    ISB_REPL_TYPE_OPTGEN,
     ISB_REPL_TYPE_PERFECT,
     ISB_REPL_TYPE_MAX
 } isb_repl_type_t;
@@ -48,7 +42,6 @@ typedef struct {
     int bloom_region_shift_bits;
     int bloom_capacity;
     float bloom_fprate;
-    uint64_t bloom_reset_insns;
 } pf_isb_conf_t;
 
 typedef enum off_chip_req_type_e {

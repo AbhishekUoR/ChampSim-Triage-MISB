@@ -65,6 +65,27 @@ void CACHE::handle_fill()
         }
 #endif
 
+        //Bypass metadata from LLC
+        if(MSHR.entry[mshr_index].type == METADATA)
+        {
+            // COLLECT STATS
+            sim_miss[fill_cpu][MSHR.entry[mshr_index].type]++;
+            sim_access[fill_cpu][MSHR.entry[mshr_index].type]++;
+
+            assert (MSHR.entry[mshr_index].fill_level == FILL_LLC);
+
+            upper_level_dcache[fill_cpu]->complete_metadata_req(MSHR.entry[mshr_index].address);
+
+
+            if(MSHR.entry[mshr_index].type == LOAD)
+                MSHR.occupancy--;
+            MSHR.remove_queue(&MSHR.entry[mshr_index]);
+            MSHR.num_returned--;
+
+            update_fill_cycle();
+            return; // return here, no need to process further in this function
+
+        }
         uint8_t  do_fill = 1;
 
         // is this dirty?
@@ -197,6 +218,9 @@ void CACHE::handle_writeback()
         uint32_t set = get_set(WQ.entry[index].address);
         int way = check_hit(&WQ.entry[index]);
         
+        if(WQ.entry[WQ.head].type == METADATA)
+            way = -1;
+        
         if (way >= 0) { // writeback hit (or RFO hit for L1D)
 
             if (cache_type == IS_LLC) {
@@ -243,8 +267,34 @@ void CACHE::handle_writeback()
             cout << " full_addr: " << WQ.entry[index].full_addr << dec;
             cout << " cycle: " << WQ.entry[index].event_cycle << endl; });
 
+            if(WQ.entry[WQ.head].type == METADATA)
+            {
+                assert(cache_type == IS_LLC);
+                assert(lower_level);
+                //This bypasses the cache and goes straight to memory
+                PACKET writeback_packet;
+
+                writeback_packet.fill_level = FILL_DRAM;
+                writeback_packet.cpu = writeback_cpu;
+                writeback_packet.address = WQ.entry[WQ.head].address;
+                writeback_packet.full_addr = WQ.entry[WQ.head].full_addr;
+                writeback_packet.data = WQ.entry[WQ.head].data;
+                writeback_packet.type = METADATA;
+                writeback_packet.event_cycle = current_core_cycle[writeback_cpu];
+
+                lower_level->add_wq(&writeback_packet);
+
+                // COLLECT STATS
+                sim_miss[writeback_cpu][WQ.entry[index].type]++;
+                sim_access[writeback_cpu][WQ.entry[index].type]++;
+
+                // remove this entry from WQ
+                WQ.remove_queue(&WQ.entry[index]);
+                return;
+            }
             if (cache_type == IS_L1D) { // RFO miss
 
+                assert(WQ.entry[WQ.head].type != METADATA);
                 // check mshr
                 uint8_t miss_handled = 1;
                 int mshr_index = check_mshr(&WQ.entry[index]);
@@ -707,6 +757,9 @@ void CACHE::handle_prefetch()
             // access cache
             uint32_t set = get_set(PQ.entry[index].address);
             int way = check_hit(&PQ.entry[index]);
+            
+            if(PQ.entry[PQ.head].type == METADATA)
+                way = -1;
             
             if (way >= 0) { // prefetch hit
 

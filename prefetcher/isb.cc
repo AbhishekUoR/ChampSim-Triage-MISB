@@ -1,7 +1,6 @@
 
 #include <iostream>
 #include <set>
-#include <map>
 #include "isb.h"
 #include "cache.h"
 #include "isb_training_unit.h"
@@ -23,9 +22,6 @@ using namespace std;
 //#define PS_FIX
 //#define PS_FIX_PREDICTION
 
-#define NOMETAPREF
-#define NO_OFF_CHIP_PS_ACCESS
-
 bool IsbPrefetcher::InitPrefetch(uint64_t candidate, uint16_t delay)
 {
     prefetch_list.push_back(candidate);
@@ -43,7 +39,7 @@ void IsbPrefetcher::isb_train_addr(uint64_t pc, bool str_addr_exists, uint64_t a
             repeat++;
             return;
         }
-        str_addr_B = isb_train(str_addr_A, addr_B, str_addr_exists, str_addr_B, pc);
+        str_addr_B = isb_train(str_addr_A, addr_B, str_addr_exists, str_addr_B);
         //cout << "New str_addr: " << hex << str_addr_B << endl;
     }
     else if (!str_addr_exists) {
@@ -53,7 +49,7 @@ void IsbPrefetcher::isb_train_addr(uint64_t pc, bool str_addr_exists, uint64_t a
 #ifdef OFF_CHIP_ONLY
         off_chip_corr_matrix.update(addr_B, str_addr_B);
 #else
-        on_chip_corr_matrix.update(addr_B, str_addr_B, true, pc);
+        on_chip_corr_matrix.update(addr_B, str_addr_B, true);
         if (on_chip_corr_matrix.repl_policy != ISB_REPL_TYPE_PERFECT && !off_chip_writeback) {
             off_chip_corr_matrix.update(addr_B, str_addr_B);
             #ifdef BLOOM_ISB
@@ -79,8 +75,7 @@ void IsbPrefetcher::isb_train_addr(uint64_t pc, bool str_addr_exists, uint64_t a
     training_unit.update(pc, addr_B, str_addr_B);
 }
 
-uint32_t IsbPrefetcher::isb_train(uint32_t str_addr_A, uint64_t phy_addr_B,
-        bool str_addr_B_exists, uint32_t str_addr_B, uint64_t pc)
+uint32_t IsbPrefetcher::isb_train(uint32_t str_addr_A, uint64_t phy_addr_B, bool str_addr_B_exists, uint32_t str_addr_B)
 {
     //Algorithm for training correlated pair (A,B)
     //Step 2a : If SA(A)+1 does not exist, assign B SA(A)+1
@@ -99,7 +94,7 @@ uint32_t IsbPrefetcher::isb_train(uint32_t str_addr_A, uint64_t phy_addr_B,
 #ifdef OFF_CHIP_ONLY
             off_chip_corr_matrix.update(phy_addr_B, str_addr_B);
 #else
-            on_chip_corr_matrix.update(phy_addr_B, str_addr_B, true, pc);
+            on_chip_corr_matrix.update(phy_addr_B, str_addr_B, true);
             if (!off_chip_writeback) {
                 off_chip_corr_matrix.update(phy_addr_B, str_addr_B);
                 #ifdef BLOOM_ISB
@@ -185,16 +180,9 @@ uint32_t IsbPrefetcher::isb_train(uint32_t str_addr_A, uint64_t phy_addr_B,
         str_addr_A+1);
     bool phy_addr_Aplus1_exists_off_chip = phy_addr_Aplus1_exists;
 #else
-    bool phy_addr_Aplus1_exists;
-    if (on_chip_corr_matrix.repl_policy != ISB_REPL_TYPE_OPTGEN) {
-        phy_addr_Aplus1_exists =
-            on_chip_corr_matrix.get_physical_address(phy_addr_Aplus1,
-                str_addr_A+1, false, pc);
-    } else {
-        phy_addr_Aplus1_exists =
-            on_chip_corr_matrix.get_physical_address_optimal(phy_addr_Aplus1,
+    bool phy_addr_Aplus1_exists =
+        on_chip_corr_matrix.get_physical_address(phy_addr_Aplus1,
                 str_addr_A+1, false);
-    }
     bool phy_addr_Aplus1_exists_off_chip =
         off_chip_corr_matrix.get_physical_address(phy_addr_Aplus1,
                 str_addr_A+1);
@@ -222,7 +210,7 @@ uint32_t IsbPrefetcher::isb_train(uint32_t str_addr_A, uint64_t phy_addr_B,
 #ifdef OFF_CHIP_ONLY
             off_chip_corr_matrix.update(phy_addr_B, str_addr_B);
 #else
-            on_chip_corr_matrix.update(phy_addr_B, str_addr_B, true, pc);
+            on_chip_corr_matrix.update(phy_addr_B, str_addr_B, true);
             if (!off_chip_writeback) {
                 off_chip_corr_matrix.update(phy_addr_B, str_addr_B);
                  #ifdef BLOOM_ISB
@@ -248,7 +236,7 @@ uint32_t IsbPrefetcher::isb_train(uint32_t str_addr_A, uint64_t phy_addr_B,
 #ifdef OFF_CHIP_ONLY
         off_chip_corr_matrix.update(phy_addr_B, str_addr_B);
 #else
-        on_chip_corr_matrix.update(phy_addr_B, str_addr_B, true, pc);
+        on_chip_corr_matrix.update(phy_addr_B, str_addr_B, true);
         if (!off_chip_writeback) {
             if (!off_chip_writeback) {
                 off_chip_corr_matrix.update(phy_addr_B, str_addr_B);
@@ -288,15 +276,9 @@ uint32_t IsbPrefetcher::isb_train(uint32_t str_addr_A, uint64_t phy_addr_B,
             off_chip_corr_matrix.get_physical_address(phy_addr_Aplus1,
                     str_addr_A+i);
 #else
-        if (on_chip_corr_matrix.repl_policy != ISB_REPL_TYPE_OPTGEN) {
-            phy_addr_Aplus1_exists =
-                on_chip_corr_matrix.get_physical_address(phy_addr_Aplus1,
-                        str_addr_A+i, false, pc);
-        } else {
-            phy_addr_Aplus1_exists =
-                on_chip_corr_matrix.get_physical_address_optimal(phy_addr_Aplus1,
-                        str_addr_A+i, false);
-        }
+        phy_addr_Aplus1_exists =
+            on_chip_corr_matrix.get_physical_address(phy_addr_Aplus1,
+                    str_addr_A+i, false);
 #endif
         if (!phy_addr_Aplus1_exists && invalidated) {
                 same_stream_count++;
@@ -309,12 +291,13 @@ uint32_t IsbPrefetcher::isb_train(uint32_t str_addr_A, uint64_t phy_addr_B,
         new_addr++;
         str_addr_B = str_addr_A + i;
     }
+#endif
 
 
 #ifdef OFF_CHIP_ONLY
     off_chip_corr_matrix.update(phy_addr_B, str_addr_B);
 #else
-    on_chip_corr_matrix.update(phy_addr_B, str_addr_B, true, pc);
+    on_chip_corr_matrix.update(phy_addr_B, str_addr_B, true);
     if (!off_chip_writeback) {
         off_chip_corr_matrix.update(phy_addr_B, str_addr_B);
         #ifdef BLOOM_ISB
@@ -337,7 +320,6 @@ uint32_t IsbPrefetcher::isb_train(uint32_t str_addr_A, uint64_t phy_addr_B,
     debug_cout << "-----S(B) : " << hex << str_addr_B  << endl;
 #endif
 #endif
-#endif
     return str_addr_B;
 }
 
@@ -351,7 +333,7 @@ uint32_t IsbPrefetcher::assign_structural_addr()
 }
 
 void IsbPrefetcher::isb_predict(uint64_t trigger_phy_addr,
-        uint32_t trigger_str_addr, uint64_t pc)
+        uint32_t trigger_str_addr)
 {
     debug_cout << "*Trigger Str addr " << hex
         << trigger_str_addr  << endl;
@@ -381,14 +363,8 @@ void IsbPrefetcher::isb_predict(uint64_t trigger_phy_addr,
             ++off_chip_phy_found;
         if (ret)
 #else
-        bool ret;
-        if (on_chip_corr_matrix.repl_policy != ISB_REPL_TYPE_OPTGEN) {
-            ret = on_chip_corr_matrix.get_physical_address(phy_addr,
-                    str_addr_candidate, true, pc);
-        } else {
-            ret = on_chip_corr_matrix.get_physical_address_optimal(phy_addr,
-                    str_addr_candidate, true);
-        }
+        bool ret = on_chip_corr_matrix.get_physical_address(phy_addr,
+                str_addr_candidate, true);
         bool off_chip_ret = false;
         if (i==0) {
             if (ret) {
@@ -426,19 +402,12 @@ void IsbPrefetcher::isb_predict(uint64_t trigger_phy_addr,
         }
         if (!ret) {
 #ifndef OFF_CHIP_ONLY
-            if (on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_METAPREF
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_TLBSYNC_METAPREF
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_BULKMETAPREF
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_TLBSYNC_BULKMETAPREF
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_SRRIP
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_BRRIP
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_DRRIP
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_HAWKEYE
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_OPTGEN
-            ) {
-#ifndef NOMETAPREF
-                on_chip_corr_matrix.doPrefetch(trigger_phy_addr, trigger_str_addr, false, pc);
-#endif
+            if ((on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_METAPREF
+                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_TLBSYNC_METAPREF)) {
+                on_chip_corr_matrix.doPrefetch(trigger_phy_addr, trigger_str_addr, false);
+            } else if ((on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_BULKMETAPREF
+                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_TLBSYNC_BULKMETAPREF)) {
+                on_chip_corr_matrix.doPrefetch(trigger_phy_addr, trigger_str_addr, false);
         //        on_chip_corr_matrix.doPrefetchBulk(addr_B, str_addr_B, false);
             }
 #endif
@@ -447,18 +416,12 @@ void IsbPrefetcher::isb_predict(uint64_t trigger_phy_addr,
 #ifndef OFF_CHIP_ONLY
         if (ret || off_chip_ret) {
         //cout << "Metadata prefetch " << on_chip_corr_matrix.repl_policy << endl;
-            if (on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_METAPREF
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_TLBSYNC_METAPREF
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_BULKMETAPREF
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_SRRIP
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_BRRIP
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_DRRIP
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_HAWKEYE
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_OPTGEN
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_TLBSYNC_BULKMETAPREF) {
-#ifndef NOMETAPREF
-                on_chip_corr_matrix.doPrefetch(phy_addr, str_addr_candidate, true, pc);
-#endif
+            if ((on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_METAPREF
+                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_TLBSYNC_METAPREF)) {
+                on_chip_corr_matrix.doPrefetch(phy_addr, str_addr_candidate, true);
+            } else if ((on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_BULKMETAPREF
+                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_TLBSYNC_BULKMETAPREF)) {
+                on_chip_corr_matrix.doPrefetch(phy_addr, str_addr_candidate, true);
 //                on_chip_corr_matrix.doPrefetchBulk(phy_addr, str_addr_candidate, true);
             }
         }
@@ -486,12 +449,7 @@ bool IsbPrefetcher::issue_prefetch_buffer()
         uint64_t phy_addr;
         if(!prefetch_buffer.valid[i])
             continue;
-        bool ret;
-        if (on_chip_corr_matrix.repl_policy != ISB_REPL_TYPE_OPTGEN) {
-            ret = on_chip_corr_matrix.get_physical_address(phy_addr, prefetch_buffer.buffer[i], false, 0);
-        } else {
-            ret = on_chip_corr_matrix.get_physical_address_optimal(phy_addr, prefetch_buffer.buffer[i], false);
-        }
+        bool ret = on_chip_corr_matrix.get_physical_address(phy_addr, prefetch_buffer.buffer[i], false);
         if(ret) {
             uint64_t candidate = phy_addr;
             InitPrefetch(candidate);
@@ -551,12 +509,12 @@ vector<uint64_t> IsbPrefetcher::informTLBEviction(uint64_t inserted_vaddr, uint6
         uint64_t phy_addr_to_fetch = (inserted_page_addr << 12) | (i << 6);
         uint32_t str_addr_to_fetch;
         ++tlbsync_fetch_total;
-        if (!on_chip_corr_matrix.get_structural_address(phy_addr_to_fetch, str_addr_to_fetch, false, 0) )
+        if (!on_chip_corr_matrix.get_structural_address(phy_addr_to_fetch, str_addr_to_fetch, false) )
         {
             debug_cout << " TLB Inserting: " << hex <<  phy_addr_to_fetch << " " << str_addr_to_fetch << endl;
             ++tlbsync_fetch_actual;
             if (on_chip_corr_matrix.ideal_off_chip_transaction) {
-                on_chip_corr_matrix.update(phy_addr_to_fetch, str_addr_to_fetch, true, 0); // XXX: PC
+                on_chip_corr_matrix.update(phy_addr_to_fetch, str_addr_to_fetch, true);
             } else {
                 debug_cout << " TLB Sync: " << hex <<  phy_addr_to_fetch << " " << str_addr_to_fetch << endl;
 //                on_chip_corr_matrix.access_off_chip(phy_addr_to_fetch, str_addr_to_fetch, ISB_OCI_REQ_LOAD_PS);
@@ -607,8 +565,6 @@ void IsbPrefetcher::set_conf(const pf_isb_conf_t *p)
     set_bloom_capacity(p->bloom_capacity);
     set_bloom_region_shift_bits(p->bloom_region_shift_bits);
     set_bloom_fprate(p->bloom_fprate);
-    bloom_reset_insns = p->bloom_reset_insns;
-    bloom_last_insns = 0;
     allocate_bloom_filter();
     #endif
 }
@@ -641,21 +597,12 @@ void IsbPrefetcher::calculatePrefetch(uint64_t addr_B, uint64_t pc, bool hit,
     if (str_addr_B_exists)
         ++off_chip_str_found;
 #else
-    bool str_addr_B_exists;
-    if (on_chip_corr_matrix.repl_policy != ISB_REPL_TYPE_OPTGEN) {
-        str_addr_B_exists = on_chip_corr_matrix.get_structural_address(
-            addr_B, str_addr_B, true, pc);
-    } else {
-        str_addr_B_exists =
-            on_chip_corr_matrix.get_structural_address_optimal(pc,
-                addr_B, str_addr_B, true);
-    }
-
+    bool str_addr_B_exists =
+        on_chip_corr_matrix.get_structural_address(addr_B, str_addr_B, true);
     bool str_addr_B_exists_off_chip = false;
-    if (str_addr_B_exists) {
+    if (str_addr_B_exists)
         ++on_chip_str_found;
-        ps_hit_list[addr_B>>10]++;
-    } else {
+    else {
         str_addr_B_exists_off_chip =
             off_chip_corr_matrix.get_structural_address(addr_B, str_addr_B);
 
@@ -668,7 +615,7 @@ void IsbPrefetcher::calculatePrefetch(uint64_t addr_B, uint64_t pc, bool hit,
             *  Initially cross-check the boom filter output with str_add_B_exists_off_chip value below
            */
            bool str_addr_B_exists_off_chip_bloom = false;
-           str_addr_B_exists_off_chip_bloom = lookup_bloom_filter_ps(addr_B);
+           str_addr_B_exists_off_chip_bloom = lookup_bloom_filter(addr_B);
            if (str_addr_B_exists_off_chip_bloom) ++ps_bloom_found; else ++ps_bloom_not_found;
            if (str_addr_B_exists_off_chip) ++ps_bloom_wb_found; else ++ps_bloom_wb_not_found;
            if (str_addr_B_exists_off_chip) {
@@ -678,7 +625,6 @@ void IsbPrefetcher::calculatePrefetch(uint64_t addr_B, uint64_t pc, bool hit,
              if (str_addr_B_exists_off_chip == str_addr_B_exists_off_chip_bloom) ++ps_not_offchip_bloom_correct;
              else ++ps_not_offchip_bloom_incorrect;
            }
-
            #ifdef BLOOM_ISB_TRACE
            printf("BLTRACE: addr 0x%lx, GroundTruth %d, BloomSays: %d\n", addr_B, str_addr_B_exists_off_chip, str_addr_B_exists_off_chip_bloom);
            #endif
@@ -713,15 +659,9 @@ void IsbPrefetcher::calculatePrefetch(uint64_t addr_B, uint64_t pc, bool hit,
 
     if (!str_addr_B_exists) {
         if (on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_BULKLRU
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_SRRIP
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_BRRIP
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_DRRIP
-                || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_HAWKEYE
                 || on_chip_corr_matrix.repl_policy == ISB_REPL_TYPE_BULKMETAPREF) {
 //            on_chip_corr_matrix.fetch_bulk(addr_B, ISB_OCI_REQ_LOAD_PS);
-#ifndef NO_OFF_CHIP_PS_ACCESS
             on_chip_corr_matrix.access_off_chip(addr_B, str_addr_B, ISB_OCI_REQ_LOAD_PS);
-#endif
         }
     }
 #endif
@@ -744,12 +684,12 @@ void IsbPrefetcher::calculatePrefetch(uint64_t addr_B, uint64_t pc, bool hit,
 #ifdef PS_FIX_PREDICTION
     if (str_addr_B_exists || str_addr_B_exists_off_chip) {
         predict_init++;
-        isb_predict(addr_B, str_addr_B, pc);
+        isb_predict(addr_B, str_addr_B);
     }
 #else
     if (str_addr_B_exists){
         predict_init++;
-        isb_predict(addr_B, str_addr_B, pc);
+        isb_predict(addr_B, str_addr_B);
     }
 #endif
 
@@ -863,15 +803,11 @@ void IsbPrefetcher::read_metadata(uint64_t addr, uint64_t phy_addr, uint32_t str
         if(ideal_bloom_filter.find(meta_data_addr) == ideal_bloom_filter.end())
             return;
         ps_md_requests++;
-        ps_used_list[phy_addr>>10]++;
-        either_used_list[phy_addr>>10]++;
         metadata_mapping[meta_data_addr].set(phy_addr, str_addr, true);
     }
     else if(req_type == ISB_OCI_REQ_LOAD_SP1 || req_type == ISB_OCI_REQ_LOAD_SP2)
     {
         sp_md_requests++;
-        sp_used_list[str_addr>>3]++;
-        either_used_list[phy_addr>>10]++;
         metadata_mapping[meta_data_addr].set(phy_addr, str_addr, false);
     //    cout << "Sending out " << hex << meta_data_addr << " " << dec << (void*)str_addr << endl;
     }
@@ -879,9 +815,7 @@ void IsbPrefetcher::read_metadata(uint64_t addr, uint64_t phy_addr, uint32_t str
     metadata_read_requests.insert(meta_data_addr);
     //cout << "Read MD " << hex << meta_data_addr << dec << endl;
     //cout << "             " << hex << phy_addr << " " << str_addr << " " << dec << (uint32_t)req_type << endl;
-#ifdef NO_META_LATENCY
-    complete_metadata_req(meta_data_addr);
-#endif
+    //complete_metadata_req(meta_data_addr);
 }
 
 void IsbPrefetcher::write_metadata(uint64_t addr, off_chip_req_type_t req_type)
@@ -891,9 +825,6 @@ void IsbPrefetcher::write_metadata(uint64_t addr, off_chip_req_type_t req_type)
     unsigned long long meta_data_addr = (addr)^crcPolynomial;
     //for( unsigned int i = 0; i < 32; i++ )
     //    meta_data_addr = ( ( meta_data_addr & 1 ) == 1 ) ? ( ( meta_data_addr >> 1 ) ^ crcPolynomial ) : ( meta_data_addr >> 1 );
-    if (!ps_used_list.count(addr)) {
-        ps_used_list[addr] = 0;
-    }
 
     write_md_requests++;
     metadata_write_requests.insert(meta_data_addr);
@@ -915,7 +846,7 @@ void IsbPrefetcher::complete_metadata_req(uint64_t meta_data_addr)
             uint32_t str_addr;
             bool ret = off_chip_corr_matrix.get_structural_address(*it, str_addr);
             if (ret && (str_addr != INVALID_ADDR))
-                isb_predict(*it, str_addr, 0);
+                isb_predict(*it, str_addr);
         }
     }
     else
@@ -979,14 +910,6 @@ void IsbPrefetcher::dump_stats()
     CSV_STATT(base, "ps_bloom_wb_not_found", ps_bloom_wb_not_found);
     CSV_STATT(base, "ps_bloom_found", ps_bloom_found);
     CSV_STATT(base, "ps_bloom_not_found", ps_bloom_not_found);
-    CSV_STATT(base, "sp_offchip_bloom_correct", sp_offchip_bloom_correct);
-    CSV_STATT(base, "sp_offchip_bloom_incorrect", sp_offchip_bloom_incorrect);
-    CSV_STATT(base, "sp_not_offchip_bloom_correct", sp_not_offchip_bloom_correct);
-    CSV_STATT(base, "sp_not_offchip_bloom_incorrect", sp_not_offchip_bloom_incorrect);
-    CSV_STATT(base, "sp_bloom_wb_found", sp_bloom_wb_found);
-    CSV_STATT(base, "sp_bloom_wb_not_found", sp_bloom_wb_not_found);
-    CSV_STATT(base, "sp_bloom_found", sp_bloom_found);
-    CSV_STATT(base, "sp_bloom_not_found", sp_bloom_not_found);
 #endif
     CSV_STATT(base, "nb_on_chip_ps_accesses", on_chip_corr_matrix.ps_accesses);
     CSV_STATT(base, "nb_on_chip_ps_hits", on_chip_corr_matrix.ps_hits);
@@ -1026,31 +949,184 @@ void IsbPrefetcher::dump_stats()
     CSV_STATT(base, "SP-Req", sp_md_requests);
     CSV_STATT(base, "Write-Req", write_md_requests);
 
-#if 0
-    // PS/SP USAGE COUNT
-    printf("PS USED LIST\n");
-    for (map<uint64_t, uint64_t>::const_iterator it = ps_used_list.begin();
-            it != ps_used_list.end(); ++it) {
-        printf("PS %lx %lx\n", it->first, it->second, ps_hit_list[it->first]);
-    }
-    printf("SP USED LIST\n");
-    for (map<uint64_t, uint64_t>::const_iterator it = ps_used_list.begin();
-            it != ps_used_list.end(); ++it) {
-        printf("SP %lx %lx\n", it->first, it->second);
-    }
-    printf("ET USED LIST\n");
-    for (map<uint64_t, uint64_t>::const_iterator it = ps_used_list.begin();
-            it != ps_used_list.end(); ++it) {
-        printf("ET %lx %lx\n", it->first, it->second);
-    }
-#endif
-
-    // Print on chip details
-    on_chip_corr_matrix.print();
-
 }
 
 /*
+void IsbPrefetcher::print_detailed_stats(const prefetcher_t *pf, tprinter_t *tp)
+{
+#define BS 256
+    //  char tmp[BS];
+    int sidx = -1;
+
+    TRACE("Detailed stats for %s:\n", pf->name);
+    table_printer_reset(tp);
+    table_printer_show_outline(tp, true);
+    table_printer_set_first_column_is_not_label(tp);
+
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_triggers", BS, "%ld", triggers);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_stream_head", BS, "%ld", stream_head);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_same_addr", BS, "%ld", same_addr);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_new_addr", BS, "%ld", new_addr);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_stream_divergence_count", BS, "%ld", stream_divergence_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_stream_divergence_count_offchip", BS, "%ld", stream_divergence_count_offchip);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_not_found", BS, "%ld", not_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_inval_count", BS, "%ld", inval_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_no_conflict_count", BS, "%ld", no_conflict_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_same_stream_count", BS, "%ld", same_stream_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_new_stream_count", BS, "%ld", new_stream_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_repeat", BS, "%ld", repeat);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_predictions", BS, "%ld", predictions);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_predict_init", BS, "%ld", predict_init);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_predict_stream_end", BS, "%ld", predict_stream_end);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_phy_found", BS, "%ld", on_chip_phy_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_off_chip_phy_found", BS, "%ld", off_chip_phy_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_str_found", BS, "%ld", on_chip_str_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_off_chip_str_found", BS, "%ld", off_chip_str_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_tlbsync_fetch_total", BS, "%ld", tlbsync_fetch_total);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_tlbsync_fetch_actual", BS, "%ld", tlbsync_fetch_actual);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_bulk_actual", BS, "%ld", on_chip_corr_matrix.bulk_actual);
+    //sidx = table_printer_add_column(tp);
+    //sidx = table_printer_add_column(tp);
+    //ADD_STAT(sidx, sidx, "nb_on_chip_mispredictions", BS, "%ld", on_chip_mispredictions);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_new_stream_newpcaddr", BS, "%ld", new_stream_new_pc_addr);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_new_stream_endstream", BS, "%ld", new_stream_endstream);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_new_stream_divergence", BS, "%ld", new_stream_divergence);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_training_pc_found", BS, "%ld", training_unit.training_unit_pc_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_training_pc_not_found", BS, "%ld", training_unit.training_unit_pc_not_found);
+    //sidx = table_printer_add_column(tp);
+
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_off_chip_str_access", BS, "%ld", off_chip_corr_matrix.str_access_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_off_chip_str_success", BS, "%ld", off_chip_corr_matrix.str_success_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_off_chip_phy_access", BS, "%ld", off_chip_corr_matrix.phy_access_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_off_chip_phy_success", BS, "%ld", off_chip_corr_matrix.phy_success_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_off_chip_update", BS, "%ld", off_chip_corr_matrix.update_count);
+
+#ifndef OFF_CHIP_ONLY
+    // on-chip stats
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_ps_accesses", BS, "%ld", on_chip_corr_matrix.ps_accesses);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_ps_hits", BS, "%ld", on_chip_corr_matrix.ps_hits);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_ps_prefetch_hits", BS, "%ld", on_chip_corr_matrix.ps_prefetch_hits);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_sp_accesses", BS, "%ld", on_chip_corr_matrix.sp_accesses);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_sp_hits", BS, "%ld", on_chip_corr_matrix.sp_hits);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_sp_prefetch_hits", BS, "%ld", on_chip_corr_matrix.sp_prefetch_hits);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_sp_not_found", BS, "%ld", on_chip_corr_matrix.sp_not_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_sp_invalid", BS, "%ld", on_chip_corr_matrix.sp_invalid);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_metapref_count", BS, "%ld", on_chip_corr_matrix.metapref_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_metapref_success", BS, "%ld", on_chip_corr_matrix.oci_pref.metapref_success);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_metapref_not_found", BS, "%ld", on_chip_corr_matrix.oci_pref.metapref_not_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_metapref_stream_end", BS, "%ld", on_chip_corr_matrix.oci_pref.metapref_stream_end);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_metapref_duplicate", BS, "%ld", on_chip_corr_matrix.metapref_duplicate);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_metapref_conflict", BS, "%ld", on_chip_corr_matrix.metapref_conflict);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_metapref_actual", BS, "%ld", on_chip_corr_matrix.metapref_actual);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_filler_full_count", BS, "%ld", on_chip_corr_matrix.filler_full_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_filler_same_addr", BS, "%ld", on_chip_corr_matrix.filler_same_addr);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_filler_load_count", BS, "%ld", on_chip_corr_matrix.filler_load_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_filler_load_ps_count", BS, "%ld", on_chip_corr_matrix.filler_load_ps_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_filler_load_sp1_count", BS, "%ld", on_chip_corr_matrix.filler_load_sp1_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_filler_load_sp2_count", BS, "%ld", on_chip_corr_matrix.filler_load_sp2_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_filler_store_count", BS, "%ld", on_chip_corr_matrix.filler_store_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_bandwidth_delay_cycles", BS, "%ld", on_chip_corr_matrix.bandwidth_delay_cycles);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "nb_on_chip_issue_delay_cycles", BS, "%ld", on_chip_corr_matrix.issue_delay_cycles);
+
+  #ifdef BLOOM_ISB
+    // ks stats
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "ps_offchip_bloom_correct", BS, "%ld", ps_offchip_bloom_correct);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "ps_offchip_bloom_incorrect", BS, "%ld", ps_offchip_bloom_incorrect);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "ps_not_offchip_bloom_correct", BS, "%ld", ps_not_offchip_bloom_correct);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "ps_not_offchip_bloom_incorrect", BS, "%ld", ps_not_offchip_bloom_incorrect);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "ps_bloom_wb_found", BS, "%ld", ps_bloom_wb_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "ps_bloom_wb_not_found", BS, "%ld", ps_bloom_wb_not_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "ps_bloom_found", BS, "%ld", ps_bloom_found);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "ps_bloom_not_found", BS, "%ld", ps_bloom_not_found);
+  #endif
+
+#endif
+
+
+    // Stream stats
+    count_stream_stats();
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "stream_count", BS, "%ld", stream_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "stream_length_count", BS, "%ld", stream_length_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "stream_trigger_count", BS, "%ld", stream_trigger_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "stream_trigger_region_count", BS, "%ld", stream_trigger_region_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "stream_region_count", BS, "%ld", stream_region_count);
+    sidx = table_printer_add_column(tp);
+    ADD_STAT(sidx, sidx, "aggregated_region_count", BS, "%ld", stream_agg_region_count);
+
+    table_printer_print(tp, false);
+    TRACE("\n");
+#undef BS
+}
+
 void IsbPrefetcher::count_stream_stats()
 {
     stream_count = 0;
@@ -1108,16 +1184,10 @@ const char *g_isb_repl_type_names[] = {
     [ISB_REPL_TYPE_LFU ] = "LFU",
     [ISB_REPL_TYPE_BULKLRU ] = "BULKLRU",
     [ISB_REPL_TYPE_BULKMETAPREF ] = "BULKMETAPREF",
-    [ISB_REPL_TYPE_SRRIP ] = "SRRIP",
-    [ISB_REPL_TYPE_BRRIP ] = "BRRIP",
-    [ISB_REPL_TYPE_DRRIP ] = "DRRIP",
-    [ISB_REPL_TYPE_SHIP ] = "SHIP",
-    [ISB_REPL_TYPE_HAWKEYE ] = "HAWKEYE",
     [ISB_REPL_TYPE_TLBSYNC ] = "TLBSYNC",
     [ISB_REPL_TYPE_METAPREF ] = "METAPREF",
     [ISB_REPL_TYPE_TLBSYNC_METAPREF ] = "TLBSYNC_METAPREF",
     [ISB_REPL_TYPE_TLBSYNC_BULKMETAPREF ] = "TLBSYNC_BULKMETAPREF",
-    [ISB_REPL_TYPE_OPTGEN ] = "OPTGEN",
     [ISB_REPL_TYPE_PERFECT ] = "PERFECT",
     [ISB_REPL_TYPE_MAX ] = "INVALID"
 };

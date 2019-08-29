@@ -6,20 +6,13 @@
 #include <set>
 #include <vector>
 #include "isb_offchip.h"
-#include "optgen_simple.h"
-#include "isb_hawkeye_predictor.h"
-#include "cache.h"
-//#include "replacement/hawkeye_config.h"
-//#include "replacement/hawkeye_predictor.h"
+
 //#define COUNT_STREAM_DETAIL
 //#define MAX_OCI_FILLER 12800
 
-#define PS_METADATA_LINE_SIZE 1
-#define SP_METADATA_LINE_SIZE 32
-#define PS_METADATA_LINE_SHIFT 0
-#define SP_METADATA_LINE_SHIFT 5
 class OffChipInfo;
 class IsbPrefetcher;
+
 
 class ISBOnChipPref
 {
@@ -49,9 +42,8 @@ class OnChip_Replacement
 {
     public:
 //        virtual void setSize(size_t size) = 0;
-        virtual uint64_t pickVictim(IsbHawkeyePCPredictor* predictor) = 0;
-        // Use  CACHE ACCESS TYPE in memory_class.h
-        virtual void addEntry(uint64_t entry, uint64_t pc, int type, bool hit, IsbHawkeyePCPredictor* predictor) = 0;
+        virtual uint64_t pickVictim() = 0;
+        virtual void addEntry(uint64_t entry) = 0;
         virtual void eraseEntry(uint64_t entry) = 0;
 };
 
@@ -59,8 +51,8 @@ class OnChipReplacementLRU : public OnChip_Replacement
 {
     std::map<uint64_t, unsigned> entry_list;
     public:
-        uint64_t pickVictim(IsbHawkeyePCPredictor*);
-        void addEntry(uint64_t entry, uint64_t pc, int type, bool hit, IsbHawkeyePCPredictor*);
+        uint64_t pickVictim();
+        void addEntry(uint64_t entry);
         void eraseEntry(uint64_t entry);
 };
 
@@ -68,93 +60,17 @@ class OnChipReplacementLFU : public OnChip_Replacement
 {
     std::map<uint64_t, unsigned> entry_list;
     public:
-        uint64_t pickVictim(IsbHawkeyePCPredictor*);
-        void addEntry(uint64_t entry, uint64_t pc, int type, bool hit, IsbHawkeyePCPredictor*);
+        uint64_t pickVictim();
+        void addEntry(uint64_t entry);
         void eraseEntry(uint64_t entry);
-};
-
-class OnChipReplacementRRIP : public OnChip_Replacement
-{
-    protected:
-        // entry->rrpv
-        std::map<uint64_t, int> entry_list;
-        int max_rrpv;
-    public:
-        OnChipReplacementRRIP(int max_rrpv);
-        virtual uint64_t pickVictim(IsbHawkeyePCPredictor*);
-        virtual void eraseEntry(uint64_t entry);
-};
-
-class OnChipReplacementSRRIP : public OnChipReplacementRRIP
-{
-    public:
-        OnChipReplacementSRRIP();
-        void addEntry(uint64_t entry, uint64_t pc, int type, bool hit, IsbHawkeyePCPredictor*);
-};
-
-class OnChipReplacementBRRIP : public OnChipReplacementRRIP
-{
-    protected:
-        // entry->rrpv
-        int bip_count, bip_max;
-    public:
-        OnChipReplacementBRRIP();
-        void addEntry(uint64_t entry, uint64_t pc, int type, bool hit, IsbHawkeyePCPredictor*);
-};
-
-class OnChipReplacementDRRIP : public OnChipReplacementBRRIP
-{
-    enum SD_state {
-        SRRIP,
-        BRRIP,
-        FOLLOWER
-    };
-    uint64_t get_set_id(uint64_t addr);
-    SD_state get_state(uint64_t addr);
-    int psel, psel_max;
-    public:
-        OnChipReplacementDRRIP();
-        void addEntry(uint64_t entry, uint64_t pc, int type, bool hit, IsbHawkeyePCPredictor*);
-};
-
-struct MetaHawkeyeEntry
-{
-    int rrpv;
-    bool valid;
-};
-
-class OnChipReplacementHawkeye : public OnChipReplacementRRIP
-{
-    // addr->rrpv, -1 means does not exist
-    bool update_optgen_on_write;
-    std::map<uint64_t, MetaHawkeyeEntry> entry_list;
-    uint64_t optgen_mytimer;
-    OPTgen optgen;
-    map<uint64_t, ADDR_INFO> optgen_addr_history;
-    int region_shift;
-    map<uint64_t, uint64_t> signatures;
-    uint64_t last_addr;
-    std::map<uint64_t, uint32_t> hawkeye_pc_ps_hit_predictions;
-    std::map<uint64_t, uint32_t> hawkeye_pc_ps_total_predictions;
-    uint64_t set;
-    uint64_t num_sets;
-
-    public:
-        OnChipReplacementHawkeye(uint64_t numsets, uint64_t setId, unsigned assoc, bool update_on_write);
-        uint64_t pickVictim(IsbHawkeyePCPredictor*);
-        void update_optgen(uint64_t addr, uint64_t pc, int type, IsbHawkeyePCPredictor*);
-        void addEntry(uint64_t entry, uint64_t pc, int type, bool hit, IsbHawkeyePCPredictor*);
-        void eraseEntry(uint64_t entry);
-        OPTgen* get_optgen() { return &optgen; }
-        size_t get_entry_list_size() { return entry_list.size(); }
 };
 
 class OnChip_PS_Entry
 {
   public:
-    uint32_t str_addr[PS_METADATA_LINE_SIZE];
-    bool valid[PS_METADATA_LINE_SIZE];
-    unsigned int confidence[PS_METADATA_LINE_SIZE];
+    uint32_t str_addr;
+    bool valid;
+    unsigned int confidence;
     bool tlb_resident;
     bool dirty;
     uint64_t last_access;
@@ -164,40 +80,29 @@ class OnChip_PS_Entry
     }
 
     void reset(){
-        for(unsigned int i=0; i<PS_METADATA_LINE_SIZE; i++)
-        {
-            valid[i] = false;
-            str_addr[i] = 0;
-            confidence[i] = 0;
-        }
+        valid = false;
+        str_addr = 0;
+        confidence = 0;
         tlb_resident = true;
         last_access = 0;
     }
-
-    void reset(unsigned int offset)
-    {
-        valid[offset] = false;
-        str_addr[offset] = 0;
-        confidence[offset] = 0;
-    }
-
-    void set(uint32_t addr, unsigned int offset){
+    void set(uint32_t addr){
         //if (!cached)
         //    return;
 
-        reset(offset);
-        str_addr[offset] = addr;
-        valid[offset] = true;
-        confidence[offset] = 3;
+        reset();
+        str_addr = addr;
+        valid = true;
+        confidence = 3;
     }
-    void increase_confidence(unsigned int offset){
-        assert(valid[offset]);
-        confidence[offset] = (confidence[offset] == 3) ? confidence[offset] : (confidence[offset]+1);
+    void increase_confidence(){
+        assert(valid);
+        confidence = (confidence == 3) ? confidence : (confidence+1);
     }
-    bool lower_confidence(unsigned int offset){
-        assert(valid[offset]);
-        confidence[offset] = (confidence[offset] == 0) ? confidence[offset] : (confidence[offset]-1);
-        return confidence[offset];
+    bool lower_confidence(){
+        assert(valid);
+        confidence = (confidence == 0) ? confidence : (confidence-1);
+        return confidence;
     }
     void mark_tlb_resident()
     {
@@ -213,33 +118,23 @@ class OnChip_PS_Entry
 class OnChip_SP_Entry
 {
   public:
-    uint64_t phy_addr[SP_METADATA_LINE_SIZE];
-    bool valid[SP_METADATA_LINE_SIZE];
+    uint64_t phy_addr;
+    bool valid;
     bool tlb_resident;
     uint64_t last_access;
 
-    void reset(){   
-        for(unsigned int i=0; i<SP_METADATA_LINE_SIZE; i++)
-        {
-            valid[i] = false;
-            phy_addr[i] = 0;
-        }
+    void reset(){
+        valid = false;
+        phy_addr = 0;
         tlb_resident = true;
         last_access = 0;
     }
 
-    void reset(unsigned int offset)
-    {
-        valid[offset] = false;
-        phy_addr[offset] = 0;
-    }
-
-    void set(uint64_t addr, unsigned int offset){
+    void set(uint64_t addr){
     //    if (!cached)
     //        return;
-        reset(offset);
-        phy_addr[offset] = addr;
-        valid[offset] = true;
+        phy_addr = addr;
+        valid = true;
     }
     void mark_tlb_resident()
     {
@@ -257,22 +152,14 @@ class OnChipInfo
     IsbPrefetcher *pref;
     uint64_t off_chip_latency;
     uint64_t curr_timestamp;
-    unsigned int num_ps_sets;
-    unsigned int num_sp_sets;
-    unsigned int ps_indexMask; 
-    unsigned int sp_indexMask; 
+    unsigned int num_sets;
+    unsigned int num_repl;
+    unsigned int indexMask;
 
     unsigned amc_size, amc_assoc;
     unsigned regionsize, log_regionsize, log_cacheblocksize;
 
     unsigned filler_count;
-
-    std::vector<uint64_t> ps_optgen_mytimer, sp_optgen_mytimer;
-    std::vector<OPTgen> ps_optgen, sp_optgen;
-    std::vector<map<uint64_t, ADDR_INFO>> ps_optgen_addr_history, sp_optgen_addr_history;
-    uint64_t ps_optgen_index_mask, sp_optgen_index_mask;
-    IsbHawkeyePCPredictor ps_predictor;
-    IsbHawkeyePCPredictor sp_predictor;
 //    coroutine filler[MAX_OCI_FILLER];
 
    public:
@@ -285,18 +172,13 @@ class OnChipInfo
 #ifdef COUNT_STREAM_DETAIL
     std::set<uint32_t> active_stream_set;
 #endif
-    std::map<uint64_t, uint32_t> optgen_pc_ps_hits;
-    std::map<uint64_t, uint32_t> optgen_pc_ps_misses;
-    std::map<uint64_t, uint32_t> optgen_pc_ps_total;
 
     OnChipInfo(const pf_isb_conf_t*, OffChipInfo* off_chip_info, IsbPrefetcher* pref);
     void set_conf(const pf_isb_conf_t*, IsbPrefetcher*);
     void reset();
-    bool get_structural_address(uint64_t phy_addr, uint32_t& str_addr, bool update_stats, uint64_t pc, bool clear_dirty = false);
-    bool get_structural_address_optimal(uint64_t pc, uint64_t phy_addr, uint32_t& str_addr, bool update_stats, bool clear_dirty = false);
-    bool get_physical_address(uint64_t& phy_addr, uint32_t str_addr, bool update_stats, uint64_t pc);
-    bool get_physical_address_optimal(uint64_t& phy_addr, uint32_t str_addr, bool update_stats);
-    void update(uint64_t phy_addr, uint32_t str_addr, bool set_dirty, uint64_t pc);
+    bool get_structural_address(uint64_t phy_addr, uint32_t& str_addr, bool update_stats, bool clear_dirty = false);
+    bool get_physical_address(uint64_t& phy_addr, uint32_t str_addr, bool update_stats);
+    void update(uint64_t phy_addr, uint32_t str_addr, bool set_dirty);
     void invalidate(uint64_t phy_addr, uint32_t str_addr);
     void increase_confidence(uint64_t phy_addr);
     bool lower_confidence(uint64_t phy_addr);
@@ -309,10 +191,10 @@ class OnChipInfo
     bool is_trigger_access(uint32_t str_addr);
 #endif
 
-//    void fetch_bulk(uint64_t phy_addr, off_chip_req_type_t req_type);
+    void fetch_bulk(uint64_t phy_addr, off_chip_req_type_t req_type);
 
-    void doPrefetch(uint64_t phy_addr, uint32_t str_addr, bool is_second, uint64_t pc);
-//    void doPrefetchBulk(uint64_t phy_addr, uint32_t str_addr, bool is_second);
+    void doPrefetch(uint64_t phy_addr, uint32_t str_addr, bool is_second);
+    void doPrefetchBulk(uint64_t phy_addr, uint32_t str_addr, bool is_second);
 
     void update_phy_region(uint64_t phy_addr);
     void update_str_region(uint32_t str_addr);

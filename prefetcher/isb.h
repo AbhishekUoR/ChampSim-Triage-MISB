@@ -20,13 +20,10 @@
 #define INVALID_ADDR 0xdeadbeef
 
 //#define BLOOM_ISB
-//#define BLOOM_ISB_SP
 //#define BLOOM_ISB_TRAFFIC_DEBUG
 #ifdef BLOOM_ISB
 #include <bf/all.hpp>
 #endif
-
-#define NO_META_LATENCY
 
 extern const char *g_isb_repl_type_names[];
 //#define OFF_CHIP_ONLY
@@ -132,8 +129,7 @@ class IsbPrefetcher
         std::map<uint64_t, uint64_t> trigger_addr_count;
 
         void isb_train_addr(uint64_t pc, bool str_addr_exists, uint64_t addr_B, uint32_t str_addr_B);
-        uint32_t isb_train(uint32_t str_addr_A, uint64_t encoded_phy_addr_B,
-                bool str_addr_B_exists, uint32_t str_addr_B, uint64_t pc);
+        uint32_t isb_train(uint32_t str_addr_A, uint64_t encoded_phy_addr_B, bool str_addr_B_exists, uint32_t str_addr_B);
         void count_stream_stats();
 
         int get_stream_length(uint32_t str_addr, uint64_t phy_addr);
@@ -145,16 +141,11 @@ class IsbPrefetcher
 
     public:
 
-        std::map<uint64_t, uint64_t> ps_used_list, sp_used_list, either_used_list;
-        std::map<uint64_t, uint64_t> ps_hit_list;
         #ifdef BLOOM_ISB
-        bf::bloom_filter* off_chip_ps_bloom_filter;// = new bf::basic_bloom_filter(0.99, 4000000);
-        bf::bloom_filter* off_chip_sp_bloom_filter;// = new bf::basic_bloom_filter(0.99, 4000000);
+        bf::bloom_filter* off_chip_bloom_filter;// = new bf::basic_bloom_filter(0.99, 4000000);
         int bloom_region_shift_bits;
         int bloom_capacity;
         float bloom_fprate;
-        uint64_t bloom_reset_insns;
-        uint64_t bloom_last_insns;
         //bf::basic_bloom_filter off_chip_bloom_filter(const double 0.8, 351000);
 
         uint64_t ps_offchip_bloom_incorrect;
@@ -165,15 +156,6 @@ class IsbPrefetcher
         uint64_t ps_bloom_wb_not_found;
         uint64_t ps_bloom_found;
         uint64_t ps_bloom_not_found;
-
-        uint64_t sp_offchip_bloom_incorrect;
-        uint64_t sp_offchip_bloom_correct;
-        uint64_t sp_not_offchip_bloom_correct;
-        uint64_t sp_not_offchip_bloom_incorrect;
-        uint64_t sp_bloom_wb_found;
-        uint64_t sp_bloom_wb_not_found;
-        uint64_t sp_bloom_found;
-        uint64_t sp_bloom_not_found;
         #endif
         uint64_t ps_md_requests, sp_md_requests, write_md_requests;
 
@@ -183,23 +165,14 @@ class IsbPrefetcher
         std::set<uint64_t> metadata_write_requests;
         std::map<uint64_t, METADATAREQ> metadata_mapping;
         #ifdef BLOOM_ISB
-        bool lookup_bloom_filter_ps(uint64_t phy_addr) {
+        bool lookup_bloom_filter(uint64_t phy_addr) {
           /* phy_addr is cache line addr - last 6 bits are zero - so simply right shift by 6 to prepare
            * Then right shift by region shift bits
            */
-          return off_chip_ps_bloom_filter->lookup(phy_addr >> 6 >> bloom_region_shift_bits);
+          return off_chip_bloom_filter->lookup(phy_addr >> 6 >> bloom_region_shift_bits);
         }
-        bool lookup_bloom_filter_sp(uint64_t str_addr) {
-          /* phy_addr is cache line addr - last 6 bits are zero - so simply right shift by 6 to prepare
-           * Then right shift by region shift bits
-           */
-          return off_chip_sp_bloom_filter->lookup(str_addr >> bloom_region_shift_bits);
-        }
-        void add_to_bloom_filter_ps(uint64_t phy_addr) {
-          off_chip_ps_bloom_filter->add(phy_addr >> 6 >> bloom_region_shift_bits);
-        }
-        void add_to_bloom_filter_sp(uint64_t str_addr) {
-          off_chip_sp_bloom_filter->add(str_addr >> bloom_region_shift_bits);
+        void add_to_bloom_filter(uint64_t phy_addr) {
+          off_chip_bloom_filter->add(phy_addr >> 6 >> bloom_region_shift_bits);
         }
         void set_bloom_region_shift_bits(int bl_rs) {
           bloom_region_shift_bits  =  bl_rs;
@@ -215,8 +188,7 @@ class IsbPrefetcher
         }
         void allocate_bloom_filter() {
           std::cout << "BFP: " << bloom_fprate << ", BCP: " << bloom_capacity << std::endl;
-          off_chip_ps_bloom_filter = new bf::basic_bloom_filter(bloom_fprate, bloom_capacity);
-          off_chip_sp_bloom_filter = new bf::basic_bloom_filter(bloom_fprate, bloom_capacity);
+          off_chip_bloom_filter = new bf::basic_bloom_filter(bloom_fprate, bloom_capacity);
         }
         #endif
 
@@ -243,7 +215,7 @@ class IsbPrefetcher
 
         std::vector<uint64_t> informTLBEviction(uint64_t inserted_vaddr, uint64_t evicted_vaddr);
 
-        void isb_predict(uint64_t, uint32_t, uint64_t);
+        void isb_predict(uint64_t, uint32_t);
         void calculatePrefetch(uint64_t addr, uint64_t pc, bool hit, uint64_t* prefetch_addresses, int prefetch_addresses_size);
 //        void handle_metadata_state(control_t* data);
         void read_metadata(uint64_t, uint64_t, uint32_t, off_chip_req_type_t);
