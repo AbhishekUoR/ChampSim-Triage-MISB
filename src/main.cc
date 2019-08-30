@@ -60,6 +60,8 @@ void print_roi_stats(uint32_t cpu, CACHE *cache)
     cout << " WRITEBACK ACCESS: " << setw(10) << cache->roi_access[cpu][3] << "  HIT: " << setw(10) << cache->roi_hit[cpu][3] << "  MISS: " << setw(10) << cache->roi_miss[cpu][3] << endl;
 
     cout << cache->NAME;
+    cout << " METADATA ACCESS: " << setw(10) << cache->roi_access[cpu][4] << "  HIT: " << setw(10) << cache->roi_hit[cpu][4] << "  MISS: " << setw(10) << cache->roi_miss[cpu][4] << endl;
+    cout << cache->NAME;
     cout << " PREFETCH  REQUESTED: " << setw(10) << cache->pf_requested << "  ISSUED: " << setw(10) << cache->pf_issued;
     cout << "  USEFUL: " << setw(10) << cache->pf_useful << "  USELESS: " << setw(10) << cache->pf_useless << endl;
 }
@@ -88,6 +90,8 @@ void print_sim_stats(uint32_t cpu, CACHE *cache)
 
     cout << cache->NAME;
     cout << " WRITEBACK ACCESS: " << setw(10) << cache->sim_access[cpu][3] << "  HIT: " << setw(10) << cache->sim_hit[cpu][3] << "  MISS: " << setw(10) << cache->sim_miss[cpu][3] << endl;
+    cout << cache->NAME;
+    cout << " METADATA ACCESS: " << setw(10) << cache->sim_access[cpu][4] << "  HIT: " << setw(10) << cache->sim_hit[cpu][4] << "  MISS: " << setw(10) << cache->sim_miss[cpu][4] << endl;
 }
 
 void print_branch_stats()
@@ -532,14 +536,19 @@ int main(int argc, char** argv)
         DRAM_MTPS = 4000;
 
     // DRAM access latency
-    tRP  = tRP_DRAM_CYCLE  * (CPU_FREQ / DRAM_IO_FREQ); 
-    tRCD = tRCD_DRAM_CYCLE * (CPU_FREQ / DRAM_IO_FREQ); 
-    tCAS = tCAS_DRAM_CYCLE * (CPU_FREQ / DRAM_IO_FREQ); 
+    //tRP  = tRP_DRAM_CYCLE  * (CPU_FREQ / DRAM_IO_FREQ); 
+    //tRCD = tRCD_DRAM_CYCLE * (CPU_FREQ / DRAM_IO_FREQ); 
+    //tCAS = tCAS_DRAM_CYCLE * (CPU_FREQ / DRAM_IO_FREQ); 
+    tRP  = (uint32_t)((double)tRP_DRAM_CYCLE  * ((double)CPU_FREQ / (double)DRAM_IO_FREQ)); 
+    tRCD = (uint32_t)((double)tRCD_DRAM_CYCLE * ((double)CPU_FREQ / (double)DRAM_IO_FREQ)); 
+    tCAS = (uint32_t)((double)tCAS_DRAM_CYCLE * ((double)CPU_FREQ / (double)DRAM_IO_FREQ)); 
 
     // default: 16 = (64 / 8) * (3200 / 1600)
     // it takes 16 CPU cycles to tranfser 64B cache block on a 8B (64-bit) bus 
     // note that dram burst length = BLOCK_SIZE/DRAM_CHANNEL_WIDTH
-    DRAM_DBUS_RETURN_TIME = (BLOCK_SIZE / DRAM_CHANNEL_WIDTH) * (CPU_FREQ / DRAM_MTPS);
+    //DRAM_DBUS_RETURN_TIME = (BLOCK_SIZE / DRAM_CHANNEL_WIDTH) * (CPU_FREQ / DRAM_MTPS);
+    DRAM_DBUS_RETURN_TIME = (uint32_t)((double)(BLOCK_SIZE / DRAM_CHANNEL_WIDTH) * ((double)CPU_FREQ / (double)DRAM_MTPS));
+    printf("%u %u %u %u\n", tRP, tRCD, tCAS, DRAM_DBUS_RETURN_TIME);
 
     printf("Off-chip DRAM Size: %u MB Channels: %u Width: %u-bit Data Rate: %u MT/s\n",
             DRAM_SIZE, DRAM_CHANNELS, 8*DRAM_CHANNEL_WIDTH, DRAM_MTPS);
