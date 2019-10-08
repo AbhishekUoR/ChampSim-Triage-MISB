@@ -59,7 +59,6 @@ class Stat:
 
                 res = re.match('SAMPLEOPTGEN 1 accesses: (\d+), hits: (\d+), traffic: (\d+), hit rate: (\d+(\.\d+))', line)
                 if res != None:
-                    print(res.group(4))
                     stat['sample_optgen_hit_rate'] = float(res.group(4))
 
                 res = re.match('total_assoc=(\d+)', line)
@@ -76,7 +75,7 @@ class Stat:
         try:
             stat['ipc'] = stat['cpu_0_ipc']
         except:
-            print("ipc does not exist")
+            print("ipc does not exist", self.path)
             stat['llc_mpki'] = 0.0
             stat['ipc'] = 0.0
             error = True
@@ -100,16 +99,21 @@ class Stat:
             stat['traffic_write'] = float(stat['LLC_WRITEBACK_miss'])*1000/float(stat['cpu_0_insns'])
             stat['traffic_prefetch'] = float(stat['LLC_PREFETCH_miss'])*1000/float(stat['cpu_0_insns'])
         except:
-            None
+            stat['traffic_load'] = 0.0
+            stat['traffic_rfo'] = 0.0
+            stat['traffic_write'] = 0.0
+            stat['traffic_prefetch'] = 0.0
 
         try:
             stat['traffic_metadata'] = float(stat['LLC_METADATA_miss'])*1000/float(stat['cpu_0_insns'])
         except:
             stat['traffic_metadata'] = 0.0
+            
+        stat['traffic'] = stat['traffic_load'] + stat['traffic_rfo'] + stat['traffic_write'] + stat['traffic_prefetch'] + stat['traffic_metadata']
 
-            stat['accuracy'] = 0.0
-            stat['coverage'] = 0.0
-            stat['timeliness'] = 0.0
+        stat['accuracy'] = 0.0
+        stat['coverage'] = 0.0
+#            stat['timeliness'] = 0.0
         try:
             stat['accuracy'] = float(stat['L2C_prefetch_useful'])/(float(stat['L2C_prefetch_useful'])
                     + float(stat['L2C_prefetch_useless']))

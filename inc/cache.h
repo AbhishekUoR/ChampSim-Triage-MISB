@@ -63,9 +63,9 @@ extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
 // L2 CACHE
 #define L2C_SET 1024
 #define L2C_WAY 8
-#define L2C_RQ_SIZE 32
-#define L2C_WQ_SIZE 32
-#define L2C_PQ_SIZE 64
+#define L2C_RQ_SIZE 128
+#define L2C_WQ_SIZE 128
+#define L2C_PQ_SIZE 128
 #define L2C_MSHR_SIZE 24
 #define L2C_LATENCY 7  // 4 (L1I or L1D) + 8 = 12 cycles
 

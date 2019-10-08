@@ -164,3 +164,7 @@ void CACHE::l2c_prefetcher_final_stats()
     cout << endl << endl;
 }
 
+void CACHE::complete_metadata_req(uint64_t meta_data_addr)
+{
+}
+

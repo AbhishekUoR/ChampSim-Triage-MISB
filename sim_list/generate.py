@@ -23,5 +23,7 @@ def generate(filename, bench_list, num_cores):
 if __name__ == "__main__":
     read_list()
 #    generate("16core_workloads.txt", all_list, 16)
-    generate("16core_irregular.txt", irregular_list, 16)
-    generate("8core_irregular.txt", irregular_list, 8)
+#    generate("16core_irregular.txt", irregular_list, 16)
+#    generate("8core_irregular.txt", irregular_list, 8)
+#    generate("2core_workloads.txt", all_list, 2)
+    generate("2core_irregular.txt", irregular_list, 2)
