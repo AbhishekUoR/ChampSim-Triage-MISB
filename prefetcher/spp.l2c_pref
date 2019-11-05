@@ -1,14 +1,24 @@
 #include "cache.h"
 #include "spp.h"
 
+
 SIGNATURE_TABLE ST;
 PATTERN_TABLE   PT;
 PREFETCH_FILTER FILTER;
 GLOBAL_REGISTER GHR;
 
+// Hao: Define some stats for evaluating SPP perf
+#define DEGREE 8
+#define MAX_DEGREE 10000
+uint64_t prefetch_issue_count[MAX_DEGREE];
+uint64_t prefetch_success_count[MAX_DEGREE];
+
 void CACHE::l2c_prefetcher_initialize() 
 {
-
+    for (int i = 0; i < MAX_DEGREE; ++i) {
+        prefetch_issue_count[i] = 0;
+        prefetch_success_count[i] = 0;
+    }
 }
 
 uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
@@ -53,6 +63,9 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
              pf_q_tail = 0;
     uint8_t  do_lookahead = 0;
 
+    int prefetch_count = 0;
+    int prefetch_issue = 0;
+
 #ifdef LOOKAHEAD_ON
     do {
 #endif
@@ -64,11 +77,13 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
             if (confidence_q[i] >= PF_THRESHOLD) {
                 uint64_t pf_addr = (base_addr & ~(BLOCK_SIZE - 1)) + (delta_q[i] << LOG2_BLOCK_SIZE);
 
+                prefetch_issue++;
                 if ((addr & ~(PAGE_SIZE - 1)) == (pf_addr & ~(PAGE_SIZE - 1))) { // Prefetch request is in the same physical page
                     if (FILTER.check(pf_addr, ((confidence_q[i] >= FILL_THRESHOLD) ? SPP_L2C_PREFETCH : SPP_LLC_PREFETCH))) {
 		    
 						if(prefetch_line(ip, addr, pf_addr, ((confidence_q[i] >= FILL_THRESHOLD) ? FILL_L2 : FILL_LLC), 0)){ // Use addr (not base_addr) to obey the same physical page boundary
 							FILTER.add_to_filter(pf_addr, ((confidence_q[i] >= FILL_THRESHOLD) ? SPP_L2C_PREFETCH : SPP_LLC_PREFETCH));
+                            ++prefetch_count;
 						}
 
                         if (confidence_q[i] >= FILL_THRESHOLD) {
@@ -96,6 +111,8 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
 
                 do_lookahead = 1;
                 pf_q_head++;
+                if (prefetch_issue >= DEGREE)
+                    do_lookahead = 0;
             }
         }
 
@@ -117,6 +134,9 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
 #ifdef LOOKAHEAD_ON
     } while (do_lookahead);
 #endif
+    
+    prefetch_issue_count[prefetch_issue]++;
+    prefetch_success_count[prefetch_count]++;
 
     return metadata_in;
 }
@@ -133,7 +153,17 @@ uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
 
 void CACHE::l2c_prefetcher_final_stats()
 {
+    int64_t total_degree = 0;
+    int64_t total_trigger = 0;
+    for (int i = 0; i < MAX_DEGREE; ++i) {
+        cout << "SPP prefetch issue&success: " << prefetch_issue_count[i]
+            << ' ' << prefetch_success_count[i] << endl;
+        total_trigger += prefetch_success_count[i];
+        total_degree += prefetch_success_count[i] * i;
+    }
 
+    cout << "SPP Average Degree: " << (double)total_degree / (double)total_trigger
+        << endl;
 }
 
 void CACHE::complete_metadata_req(uint64_t meta_data_addr)

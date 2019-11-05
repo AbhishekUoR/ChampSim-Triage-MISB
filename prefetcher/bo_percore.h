@@ -14,6 +14,9 @@
 
 using namespace std;
 
+uint64_t actual_prefetch = 0;
+uint64_t total_trigger = 0;
+
 // Submission ID: 3
 
 // Paper title: A Best-Offset Prefetcher
@@ -338,6 +341,7 @@ void bo_l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, ui
 
     int l2_hit = cache_hit;
 
+    ++total_trigger;
 
     bo[cpu].dq_pop();
 
@@ -367,7 +371,8 @@ void bo_issue_prefetcher(CACHE* cache, uint64_t ip, uint64_t trigger_addr, uint6
 //        << ' ' << cache->cpu << endl;
         //if ((base_addr>>LOG2_PAGE_SIZE) == (pf_addr>>LOG2_PAGE_SIZE)) {
     if (pf_cross_page || trigger_addr>>(LOG2_PAGE_SIZE-LOGLINE) == target_addr>>(LOG2_PAGE_SIZE-LOGLINE)) {
-        cache->prefetch_line(ip , trigger_addr<<LOGLINE, target_addr<<LOGLINE, level, 0);
+        if (cache->prefetch_line(ip , trigger_addr<<LOGLINE, target_addr<<LOGLINE, level, 0))
+            ++actual_prefetch;
     }
 }
 
@@ -401,6 +406,8 @@ void bo_l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uin
 
 
 void bo_l2c_prefetcher_final_stats() {
+    double average_degree = (double)actual_prefetch / (double)total_trigger;
+    cout << "BO Average Degree: " << average_degree << endl;
 }
 
 #endif // __BO_H

@@ -69,6 +69,10 @@ class Stat:
                 if res != None:
                     stat['isb_'+res.group(1)] = int(res.group(2))
 
+                res = re.search('Average Degree: (\d+(\.\d+)?)', line)
+                if res != None:
+                    stat['average_degree'] = float(res.group(1))
+
         # TODO: Implement Multi Core. Current Version doesn't work with
         # multi-core
         # Now we just give no value to crashed executions
