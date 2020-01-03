@@ -9,7 +9,7 @@ using namespace std;
 //#define DEBUG
 
 #ifdef DEBUG
-#define debug_cout cerr << "[TABLEISB] "
+#define debug_cout cerr << "[TRIAGE] "
 #else
 #define debug_cout if (0) cerr
 #endif
