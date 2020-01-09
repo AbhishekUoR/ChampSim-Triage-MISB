@@ -18,12 +18,13 @@ RAH::RAH(uint64_t num_sets) :
     data_size(RAH_CONFIG_COUNT),
     metadata_size(RAH_CONFIG_COUNT),
     optgen_mytimer(num_sets),
-    optgens(NUM_CPUS, vector<vector<OPTgen>>(num_sets, vector<OPTgen>(RAH_CONFIG_COUNT)))
+    optgens(NUM_CPUS, vector<vector<OPTgen>>(num_sets, vector<OPTgen>(RAH_CONFIG_COUNT))),
+    trigger(0)
 {
     for (int core = 0; core < NUM_CPUS; ++core) {
         for (int set = 0; set < num_sets; ++set) {
             for (int config = 0; config < RAH_CONFIG_COUNT; ++config) {
-                optgens[core][set][config].init(rah_config_assoc[config]);
+                optgens[core][set][config].init(rah_config_assoc[config]-2);
             }
         }
     }
@@ -62,6 +63,7 @@ uint64_t RAH::get_hits(int core, int config)
 void RAH::add_access(uint64_t addr, uint64_t pc, int core, bool is_prefetch)
 {
     uint64_t set_id = (addr>>6)&index_mask;
+    ++trigger;
     if(SAMPLED_SET(set_id))
     {
         uint64_t curr_quanta = optgen_mytimer[set_id];
@@ -101,5 +103,10 @@ void RAH::add_access(uint64_t addr, uint64_t pc, int core, bool is_prefetch)
         optgen_addr_history[addr].update(optgen_mytimer[set_id], pc, false);
         optgen_mytimer[set_id]++;
     }
+}
+
+void RAH::print_stats()
+{
+    cout << "RAH Triggers: " << trigger << endl;
 }
 

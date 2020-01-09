@@ -53,10 +53,6 @@ class Stat:
                 if res != None:
                     stat['triage_predict_count'] = int(res.group(1))
 
-                res = re.match('OPTgen accesses: (\d+), hits: (\d+), traffic: (\d+), hit rate: (\d+(\.\d+))', line)
-                if res != None:
-                    stat['optgen_hit_rate'] = float(res.group(4))
-
                 res = re.match('SAMPLEOPTGEN 1 accesses: (\d+), hits: (\d+), traffic: (\d+), hit rate: (\d+(\.\d+))', line)
                 if res != None:
                     stat['sample_optgen_hit_rate'] = float(res.group(4))
@@ -73,6 +69,22 @@ class Stat:
                 if res != None:
                     stat['average_degree'] = float(res.group(1))
 
+                res = re.match('OPTgen hits: (\d+)', line)
+                if res != None:
+                    stat['optgen_hits'] = int(res.group(1))
+
+                res = re.match('OPTgen accesses: (\d+)', line)
+                if res != None:
+                    stat['optgen_accesses'] = int(res.group(1))
+
+                res = re.match('Traffic: (\d+)', line)
+                if res != None:
+                    stat['optgen_traffic'] = int(res.group(1))
+
+                res = re.match('RAH Core 0 Config (\d+) (\w+): (\d+)', line)
+                if res != None:
+                    stat['rah_config_{0}_{1}'.format(res.group(1), res.group(2))] = int(res.group(3))
+
         # TODO: Implement Multi Core. Current Version doesn't work with
         # multi-core
         # Now we just give no value to crashed executions
@@ -84,6 +96,12 @@ class Stat:
             stat['ipc'] = 0.0
             error = True
 
+        if "rah_config_0_Accesses" not in stat:
+            for config in range(6):
+                for n in ["Accesses", "Hits", "Traffic"]:
+                    stat['rah_config_{0}_{1}'.format(config, n)] = 0
+
+
         try:
             stat['l1i_apki'] = float(stat['L1I_TOTAL_access'])*1000/float(stat['cpu_0_insns'])
             stat['l1i_mpki'] = float(stat['L1I_TOTAL_miss'])*1000/float(stat['cpu_0_insns'])
@@ -93,6 +111,7 @@ class Stat:
             stat['l2c_mpki'] = float(stat['L2C_TOTAL_miss'])*1000/float(stat['cpu_0_insns'])
             stat['llc_apki'] = float(stat['LLC_TOTAL_access'])*1000/float(stat['cpu_0_insns'])
             stat['llc_mpki'] = float(stat['LLC_TOTAL_miss'])*1000/float(stat['cpu_0_insns'])
+            stat['llc_load_hit_rate'] = float(stat['LLC_LOAD_hit'])/float(stat['LLC_LOAD_access'])
             stat['llc_demand_mpki'] = float(stat['LLC_LOAD_miss']+stat['LLC_RFO_miss']+stat['LLC_WRITEBACK_miss'])*1000/float(stat['cpu_0_insns'])
         except:
             None
@@ -112,6 +131,7 @@ class Stat:
             stat['traffic_metadata'] = float(stat['LLC_METADATA_miss'])*1000/float(stat['cpu_0_insns'])
         except:
             stat['traffic_metadata'] = 0.0
+
             
         stat['traffic'] = stat['traffic_load'] + stat['traffic_rfo'] + stat['traffic_write'] + stat['traffic_prefetch'] + stat['traffic_metadata']
 
@@ -134,11 +154,15 @@ class Stat:
         except:
             None
 
+        stat['optgen_hit_rate'] = 0.0
+        try:
+            stat['optgen_hit_rate'] = float(stat['optgen_hits'])/float(stat['optgen_accesses'])
+        except:
+            None
+
         stat['triage_predict_rate'] = 0.0
-        stat['triage_optgen_hit_rate'] = 0.0
         try:
             stat['triage_predict_rate'] = float(stat['triage_predict_count']) / float(stat['triage_trigger_count'])
-            stat['triage_optgen_hit_rate'] = stat['optgen_hit_rate']
         except:
             None
 

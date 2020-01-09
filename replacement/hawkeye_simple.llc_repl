@@ -49,7 +49,7 @@ OPTgen perset_optgen[LLC_SETS]; // per-set occupancy vectors; we only use 64 of 
 #define bitmask(l) (((l) == 64) ? (unsigned long long)(-1LL) : ((1LL << (l))-1LL))
 #define bits(x, i, l) (((x) >> (i)) & bitmask(l))
 
-#define SAMPLING
+//#define SAMPLING
 //Sample 64 sets per core
 #ifdef SAMPLING
     #define SAMPLED_SET(set) (bits(set, 0 , 6) == bits(set, ((unsigned long long)log2(LLC_SETS) - 6), 6) )
@@ -80,6 +80,7 @@ void CACHE::llc_initialize_replacement()
     demand_predictor = new HAWKEYE_PC_PREDICTOR();
 
     cout << "Initialize Hawkeye state" << endl;
+    cout << "LLC_SETS: " << LLC_SETS << ", LLC_WAYS: " << LLC_WAYS << endl;
 }
 
 // find replacement victim
@@ -139,6 +140,14 @@ void CACHE::llc_update_replacement_state(uint32_t cpu, uint32_t set, uint32_t wa
     if (type == WRITEBACK)
         return;
 
+#if 0
+    cout << "HAWKEYE add access: cpu="<<cpu
+        << ", set=" << set
+        << ", full_addr=" << (void*)full_addr
+        << ", ip=" << (void*)ip
+        << ", type=" << type
+        << endl;
+#endif
 
     //If we are sampling, OPTgen will only see accesses from sampled sets
     if(SAMPLED_SET(set))

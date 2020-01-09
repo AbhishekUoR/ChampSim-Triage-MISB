@@ -15,6 +15,7 @@ const int rah_config_assoc[] = {1,2,4,8,12,16};
 class RAH
 {
     uint64_t num_sets, index_mask;
+
     // Indexed by config_no
     std::vector<uint64_t> data_size;
     std::vector<uint64_t> metadata_size;
@@ -25,11 +26,14 @@ class RAH
     std::map<uint64_t, uint64_t> signatures;
     std::vector<std::vector<std::vector<OPTgen>>> optgens;
 
+    // Stats
+    int trigger = 0;
     public:
         RAH(uint64_t num_sets);
         uint64_t get_traffic(int core, int config);
         uint64_t get_hits(int core, int config);
         uint64_t get_accesses(int core, int config);
         void add_access(uint64_t addr, uint64_t pc, int core, bool is_prefetch);
+        void print_stats();
 };
 
