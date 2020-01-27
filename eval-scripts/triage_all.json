@@ -1,0 +1,189 @@
+{
+    "eval_all_benchmarks": true,
+    "stats": [
+        "ipc",
+        "accuracy",
+        "coverage",
+        "timeliness",
+        "l1d_apki",
+        "l1d_mpki",
+        "l2c_apki",
+        "l2c_mpki",
+        "llc_apki",
+        "llc_mpki",
+        "llc_demand_mpki",
+        "traffic_load",
+        "traffic_rfo",
+        "traffic_write",
+        "traffic_prefetch",
+        "traffic_metadata",
+        "triage_predict_rate",
+        "triage_optgen_hit_rate"
+    ],
+    "champsim_dir": "/scratch/cluster/haowu/isb-meta/ChampSim_DPC3",
+    "trace_dir": "/scratch/cluster/haowu/dpc3_traces",
+    "weights_file": "/scratch/cluster/haowu/dpc3_traces/weights.txt",
+    "warmup_insns": 0,
+    "simulation_insns": 30000000,
+    "stats_dir": "/scratch/cluster/haowu/isb-meta/triage-output/triage_all",
+    "benchmark_list": [
+        "607.cactuBSSN_s-2421B",
+        "607.cactuBSSN_s-3477B",
+        "607.cactuBSSN_s-4004B",
+        "607.cactuBSSN_s-4248B",
+        "631.deepsjeng_s-928B",
+        "657.xz_s-2302B",
+        "657.xz_s-3167B",
+        "657.xz_s-4994B",
+        "657.xz_s-56B",
+        "648.exchange2_s-1227B",
+        "648.exchange2_s-1247B",
+        "648.exchange2_s-1511B",
+        "648.exchange2_s-1699B",
+        "648.exchange2_s-1712B",
+        "648.exchange2_s-210B",
+        "648.exchange2_s-353B",
+        "648.exchange2_s-387B",
+        "648.exchange2_s-584B",
+        "648.exchange2_s-72B",
+        "619.lbm_s-2676B",
+        "619.lbm_s-2677B",
+        "619.lbm_s-3766B",
+        "619.lbm_s-4268B",
+        "620.omnetpp_s-141B",
+        "620.omnetpp_s-874B",
+        "644.nab_s-12459B",
+        "644.nab_s-12521B",
+        "644.nab_s-5853B",
+        "644.nab_s-7928B",
+        "644.nab_s-9322B",
+        "623.xalancbmk_s-10B",
+        "623.xalancbmk_s-165B",
+        "623.xalancbmk_s-202B",
+        "623.xalancbmk_s-325B",
+        "623.xalancbmk_s-592B",
+        "623.xalancbmk_s-700B",
+        "621.wrf_s-575B",
+        "621.wrf_s-6673B",
+        "621.wrf_s-8065B",
+        "621.wrf_s-8100B",
+        "625.x264_s-12B",
+        "625.x264_s-18B",
+        "625.x264_s-20B",
+        "625.x264_s-33B",
+        "625.x264_s-39B",
+        "641.leela_s-1052B",
+        "641.leela_s-1083B",
+        "641.leela_s-149B",
+        "641.leela_s-334B",
+        "641.leela_s-602B",
+        "641.leela_s-800B",
+        "641.leela_s-862B",
+        "602.gcc_s-1850B",
+        "602.gcc_s-2226B",
+        "602.gcc_s-2375B",
+        "602.gcc_s-734B",
+        "603.bwaves_s-1080B",
+        "603.bwaves_s-1740B",
+        "603.bwaves_s-2609B",
+        "603.bwaves_s-2931B",
+        "603.bwaves_s-3699B",
+        "603.bwaves_s-5359B",
+        "603.bwaves_s-891B",
+        "649.fotonik3d_s-10881B",
+        "649.fotonik3d_s-1176B",
+        "649.fotonik3d_s-1B",
+        "649.fotonik3d_s-7084B",
+        "649.fotonik3d_s-8225B",
+        "627.cam4_s-490B",
+        "627.cam4_s-573B",
+        "654.roms_s-1007B",
+        "654.roms_s-1021B",
+        "654.roms_s-1070B",
+        "654.roms_s-1390B",
+        "654.roms_s-1613B",
+        "654.roms_s-293B",
+        "654.roms_s-294B",
+        "654.roms_s-523B",
+        "654.roms_s-842B",
+        "638.imagick_s-10316B",
+        "638.imagick_s-4128B",
+        "638.imagick_s-824B",
+        "605.mcf_s-1152B",
+        "605.mcf_s-1536B",
+        "605.mcf_s-1554B",
+        "605.mcf_s-1644B",
+        "605.mcf_s-472B",
+        "605.mcf_s-484B",
+        "605.mcf_s-665B",
+        "605.mcf_s-782B",
+        "605.mcf_s-994B",
+        "628.pop2_s-17B",
+        "600.perlbench_s-1273B",
+        "600.perlbench_s-210B",
+        "600.perlbench_s-570B"
+    ],
+    "experiments": [
+        {
+            "name": "noprefetch",
+            "binary": "perceptron-no-no-no-lru-1core",
+            "base": true
+        },
+        {
+            "name": "sms",
+            "binary": "perceptron-no-sms-no-lru-1core"
+        },
+        {
+            "name": "bo",
+            "binary": "perceptron-no-bo_percore-no-lru-1core"
+        },
+        {
+            "name": "stms",
+            "binary": "perceptron-no-stms-no-lru-1core"
+        },
+        {
+            "name": "domino",
+            "binary": "perceptron-no-domino-no-lru-1core"
+        },
+        {
+            "name": "misb_perfect",
+            "binary": "perceptron-no-isb_metadataprefetch-no-lru-1core"
+        },
+        {
+            "name": "triage_static_8way",
+            "binary": "perceptron-no-triage_static_1m-no-lru-1core"
+        },
+        {
+            "name": "triage_dynamic",
+            "binary": "perceptron-no-triage_dynamic-no-lru-1core"
+        },
+        {
+            "name": "triage_perfect",
+            "binary": "perceptron-no-triage_perfect-no-lru-1core"
+        },
+        {
+            "name": "bo_stms",
+            "binary": "perceptron-no-bo_stms-no-lru-1core"
+        },
+        {
+            "name": "bo_domino",
+            "binary": "perceptron-no-bo_domino-no-lru-1core"
+        },
+        {
+            "name": "bo_misb_perfect",
+            "binary": "perceptron-no-bo_misb-no-lru-1core"
+        },
+        {
+            "name": "bo_triage_static",
+            "binary": "perceptron-no-bo_triage_static_1m-no-lru-1core"
+        },
+        {
+            "name": "bo_triage_dynamic",
+            "binary": "perceptron-no-bo_triage_dynamic-no-lru-1core"
+        },
+        {
+            "name": "bo_triage_perfect",
+            "binary": "perceptron-no-bo_triage_perfect-no-lru-1core"
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+Initiate Eval Script
+ipc does not exist /scratch/cluster/haowu/isb-meta/triage-output/triage_misb_bw_test/misb_mtps250/soplex_66B.stats
+ipc does not exist /scratch/cluster/haowu/isb-meta/triage-output/triage_misb_bw_test/misb_mtps125/gcc_13B.stats
+ipc does not exist /scratch/cluster/haowu/isb-meta/triage-output/triage_misb_bw_test/misb_mtps125/soplex_66B.stats
+ipc does not exist /scratch/cluster/haowu/isb-meta/triage-output/triage_misb_bw_test/misb_mtps62/gcc_13B.stats
+ipc does not exist /scratch/cluster/haowu/isb-meta/triage-output/triage_misb_bw_test/misb_mtps62/soplex_66B.stats
+ipc does not exist /scratch/cluster/haowu/isb-meta/triage-output/triage_misb_bw_test/misb_mtps31/gcc_13B.stats
+ipc does not exist /scratch/cluster/haowu/isb-meta/triage-output/triage_misb_bw_test/misb_mtps31/soplex_66B.stats
+Writing Output...
+Output csv to:  /scratch/cluster/haowu/isb-meta/triage-output/triage_misb_bw_test
+Output Stats:  ['ipc', 'accuracy', 'coverage', 'traffic_load', 'traffic_rfo', 'traffic_write', 'traffic_prefetch', 'traffic_metadata', 'traffic']
+Output xlsx to:  /scratch/cluster/haowu/isb-meta/triage-output/triage_misb_bw_test/result.xlsx
+Output Stats:  ['ipc', 'accuracy', 'coverage', 'traffic_load', 'traffic_rfo', 'traffic_write', 'traffic_prefetch', 'traffic_metadata', 'traffic']
+Plotting chart...(Not Implemented Yet.)
