@@ -581,8 +581,10 @@ void O3_CPU::fetch_instruction()
 	  // add it to the ITLB's read queue
 	  PACKET trace_packet;
 	  trace_packet.instruction = 1;
+	  trace_packet.is_data = 0;
 	  trace_packet.tlb_access = 1;
 	  trace_packet.fill_level = FILL_L1;
+	  trace_packet.fill_l1i = 1;
 	  trace_packet.cpu = cpu;
 	  trace_packet.address = IFETCH_BUFFER.entry[index].ip >> LOG2_PAGE_SIZE;
 	  if (knob_cloudsuite)
@@ -621,7 +623,9 @@ void O3_CPU::fetch_instruction()
 	  // add it to the L1-I's read queue
 	  PACKET fetch_packet;
 	  fetch_packet.instruction = 1;
+	  fetch_packet.is_data = 0;
 	  fetch_packet.fill_level = FILL_L1;
+	  fetch_packet.fill_l1i = 1;
 	  fetch_packet.cpu = cpu;
 	  fetch_packet.address = IFETCH_BUFFER.entry[index].instruction_pa >> 6;
 	  fetch_packet.instruction_pa = IFETCH_BUFFER.entry[index].instruction_pa;
@@ -808,7 +812,9 @@ int O3_CPU::prefetch_code_line(uint64_t ip, uint64_t pf_addr)
 
       PACKET pf_packet;
       pf_packet.instruction = 1; // this is a code prefetch
+      pf_packet.is_data = 0;
       pf_packet.fill_level = FILL_L1;
+      pf_packet.fill_l1i = 1;
       pf_packet.pf_origin_level = FILL_L1;
       pf_packet.cpu = cpu;
 
@@ -1443,6 +1449,7 @@ void O3_CPU::operate_lsq()
 
                 data_packet.tlb_access = 1;
                 data_packet.fill_level = FILL_L1;
+                data_packet.fill_l1d = 1;
                 data_packet.cpu = cpu;
                 data_packet.data_index = SQ.entry[sq_index].data_index;
                 data_packet.sq_index = sq_index;
@@ -1525,6 +1532,7 @@ void O3_CPU::operate_lsq()
                 // add it to DTLB
                 PACKET data_packet;
                 data_packet.fill_level = FILL_L1;
+                data_packet.fill_l1d = 1;
                 data_packet.cpu = cpu;
                 data_packet.data_index = LQ.entry[lq_index].data_index;
                 data_packet.lq_index = lq_index;
@@ -1679,6 +1687,7 @@ int O3_CPU::execute_load(uint32_t rob_index, uint32_t lq_index, uint32_t data_in
     // add it to L1D
     PACKET data_packet;
     data_packet.fill_level = FILL_L1;
+    data_packet.fill_l1d = 1;
     data_packet.cpu = cpu;
     data_packet.data_index = LQ.entry[lq_index].data_index;
     data_packet.lq_index = lq_index;
@@ -2235,6 +2244,7 @@ void O3_CPU::retire_rob()
                         // sq_index and rob_index are no longer available after retirement
                         // but we pass this information to avoid segmentation fault
                         data_packet.fill_level = FILL_L1;
+                        data_packet.fill_l1d = 1;
                         data_packet.cpu = cpu;
                         data_packet.data_index = SQ.entry[sq_index].data_index;
                         data_packet.sq_index = sq_index;
