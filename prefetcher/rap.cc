@@ -64,6 +64,12 @@ void RAH::add_access(uint64_t addr, uint64_t pc, int core, bool is_prefetch)
 {
     uint64_t set_id = (addr>>6)&index_mask;
     ++trigger;
+    debug_cout << "add_access: " << (void*) addr
+        << ", " << (void*) pc
+        << ", " << core
+        << ", " << is_prefetch
+        << ", " << set_id
+        << endl;
     if(SAMPLED_SET(set_id))
     {
         uint64_t curr_quanta = optgen_mytimer[set_id];

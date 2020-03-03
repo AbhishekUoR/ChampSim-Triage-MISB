@@ -21,23 +21,24 @@ int trigger = 0;
 void CACHE::llc_prefetcher_initialize() 
 {
     cout << NUM_CPUS << endl;
-//    cpu = 0;
-    conf[cpu].lookahead = 1;
-    conf[cpu].degree = 1;
-    conf[cpu].on_chip_assoc = 8;
-    conf[cpu].training_unit_size = 10000000;
-//    conf[cpu].repl = TRIAGE_REPL_LRU;
-    conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
-//    conf[cpu].repl = TRIAGE_REPL_PERFECT;
-//    conf[cpu].use_dynamic_assoc = true;
-   conf[cpu].use_dynamic_assoc = false;
-    int assoc_config = ASSOC_CONFIG;
-    int assoc = (assoc_config>>cpu) & 1;
-    conf[cpu].on_chip_assoc = assoc?8:0;
-    conf[cpu].on_chip_set = 32768;
-    std::cout << "CPU " << cpu << " assoc: " << conf[cpu].on_chip_assoc << std::endl;
+    for (int c = 0; c < NUM_CPUS; ++c) {
+        conf[c].lookahead = 1;
+        conf[c].degree = 1;
+        conf[c].on_chip_assoc = 8;
+        conf[c].training_unit_size = 10000000;
+    //    conf[c].repl = TRIAGE_REPL_LRU;
+        conf[c].repl = TRIAGE_REPL_HAWKEYE;
+    //    conf[c].repl = TRIAGE_REPL_PERFECT;
+    //    conf[c].use_dynamic_assoc = true;
+       conf[c].use_dynamic_assoc = false;
+        int assoc_config = ASSOC_CONFIG;
+        int assoc = (assoc_config>>c) & 1;
+        conf[c].on_chip_assoc = assoc?8:0;
+        conf[c].on_chip_set = 32768;
+        std::cout << "CPU " << c << " assoc: " << conf[c].on_chip_assoc << std::endl;
 
-    data[cpu].set_conf(&conf[cpu]);
+        data[c].set_conf(&conf[c]);
+    }
 }
 
 uint64_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
@@ -80,7 +81,7 @@ uint64_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         if (prefetch_addr_list[i] == 0) {
             break;
         }
-        //rah.add_access(prefetch_addr_list[i], pc, cpu, true);
+        rah.add_access(prefetch_addr_list[i], pc, cpu, true);
         PACKET test_packet;
         test_packet.address = prefetch_addr_list[i] >> LOG2_BLOCK_SIZE;
         test_packet.full_addr = prefetch_addr_list[i];
@@ -122,7 +123,6 @@ uint64_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
 
 uint64_t CACHE::llc_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint64_t metadata_in)
 {
-//    cpu = 0;
     if(prefetch) {
         uint64_t next_addr;
         bool next_addr_exists = data[cpu].on_chip_data.get_next_addr(metadata_in, next_addr, 0, true);
@@ -134,7 +134,6 @@ uint64_t CACHE::llc_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
 
 void CACHE::llc_prefetcher_final_stats()
 {
- //   cpu = 0;
     cout << "CPU " << cpu << " TRIAGE Stats:" << endl;
     cout << "Trigger: " << trigger << endl;
 

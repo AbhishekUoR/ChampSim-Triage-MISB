@@ -26,9 +26,7 @@ Triage::Triage()
     conf_dec_update = 0;
     conf_inc = 0;
     new_stream = 0;
-//    for (unsigned cpu = 0; cpu < NUM_CPUS; ++cpu) {
     total_assoc = 0;
-//    }
 }
 
 void Triage::set_conf(TriageConfig *config)

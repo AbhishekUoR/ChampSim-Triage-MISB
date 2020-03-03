@@ -62,7 +62,7 @@ extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
 
 // L2 CACHE
 #define L2C_SET 1024
-#define L2C_WAY 8
+#define L2C_WAY 16
 #define L2C_RQ_SIZE 128
 #define L2C_WQ_SIZE 128
 #define L2C_PQ_SIZE 128
