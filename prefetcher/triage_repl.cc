@@ -95,7 +95,6 @@ TriageReplHawkeye::TriageReplHawkeye(std::vector<std::map<uint64_t, TriageOnchip
     uint64_t num_sets = entry_list->size();
 //    optgen.resize(num_sets);
     optgen_mytimer.resize(num_sets);
-    optgen_addr_history.clear();
     cout << "Init TriageReplHawkeye, assoc: " << assoc << ", use_dynamic_assoc: " << use_dynamic_assoc
         << endl;
 
@@ -145,14 +144,16 @@ void TriageReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
         bool opt_hit[] = {false, false};
 
         signatures[addr] = pc;
-        if(optgen_addr_history.find(addr) != optgen_addr_history.end())
+        if(optgen_addr_history[set_id].find(addr) != optgen_addr_history[set_id].end())
         {
-            uint64_t last_quanta = optgen_addr_history[addr].last_quanta;
+            uint64_t last_quanta = optgen_addr_history[set_id][addr].last_quanta;
             assert(curr_quanta >= last_quanta);
 
-            uint64_t last_pc = optgen_addr_history[addr].PC;
-//            opt_hit = optgen[set_id].should_cache(curr_quanta, last_quanta, false, 0); //TODO: CPU
+            uint64_t last_pc = optgen_addr_history[set_id][addr].PC;
             for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
+                debug_cout << l << " SHOULD CACHE ADDR: " << hex << addr << ", opt_hit: " << dec << opt_hit[l]
+                    << ", curr_quanta: " << curr_quanta << ", last_quanta: " << last_quanta
+                    << endl;
                 assert(curr_quanta > last_quanta);
                 opt_hit[l] = sample_optgen[l][set_id].should_cache(curr_quanta, last_quanta, false);
                 sample_optgen[l][set_id].add_access(curr_quanta);
@@ -176,14 +177,17 @@ void TriageReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
         else
         {
             //Initialize a new entry in the sampler
-            optgen_addr_history[addr].init(curr_quanta);
+            optgen_addr_history[set_id][addr].init(curr_quanta);
+            debug_cout << " INITNEWENTRY: setid: " << set_id << "tag: " << addr
+                << ", curr_quanta: " << curr_quanta << endl;
+
             //optgen[set_id].add_access(curr_quanta, 0); //TODO: CPU
             for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
                 sample_optgen[l][set_id].add_access(curr_quanta);
             }
         }
 
-        optgen_addr_history[addr].update(optgen_mytimer[set_id], pc, false);
+        optgen_addr_history[set_id][addr].update(optgen_mytimer[set_id], pc, false);
         optgen_mytimer[set_id]++;
     }
 

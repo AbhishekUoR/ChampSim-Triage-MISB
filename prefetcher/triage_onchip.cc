@@ -9,7 +9,7 @@ using namespace std;
 //#define DEBUG
 
 #ifdef DEBUG
-#define debug_cout cerr << "[TRIAGE_ONCHIP] "
+#define debug_cout cerr << hex << "[TRIAGE_ONCHIP] "
 #else
 #define debug_cout if (0) cerr
 #endif
@@ -49,9 +49,11 @@ void TriageOnchip::set_conf(TriageConfig *config)
     assoc = config->on_chip_assoc;
     num_sets = config->on_chip_set;
     num_sets = num_sets >> ONCHIP_LINE_SHIFT;
+    log_num_sets = config->log_on_chip_set;
     repl_type = config->repl;
     index_mask = num_sets - 1;
     use_dynamic_assoc = config->use_dynamic_assoc;
+    use_compressed_tag = config->use_compressed_tag;
 
     entry_list.resize(num_sets);
     repl = TriageRepl::create_repl(&entry_list, repl_type, assoc, use_dynamic_assoc);
@@ -74,12 +76,31 @@ uint64_t TriageOnchip::get_set_id(uint64_t addr)
     return set_id;
 }
 
+uint64_t TriageOnchip::generate_tag(uint64_t addr)
+{
+    uint64_t tag = addr >> 6 >> ONCHIP_LINE_SHIFT;
+    if (use_compressed_tag) {
+        uint64_t compressed_tag = 0;
+        uint64_t mask = ((1ULL << ONCHIP_TAG_BITS) - 1);
+        while (tag > 0) {
+            compressed_tag = compressed_tag ^ (tag & mask);
+            tag = tag >> ONCHIP_TAG_BITS;
+        }
+        assert(compressed_tag <= mask);
+        debug_cout << "GENERATETAG: addr " << addr << ", mask: " << mask
+            << ", tag: " << (addr>>6>>ONCHIP_LINE_SHIFT) << ", compressed_tag: " << compressed_tag <<endl;
+        return compressed_tag;
+    } else {
+        return tag;
+    }
+}
+
 int TriageOnchip::increase_confidence(uint64_t addr)
 {
     uint64_t set_id = get_set_id(addr);
     assert(set_id < num_sets);
     uint64_t line_offset = get_line_offset(addr);
-    uint64_t tag = addr >> 6 >> ONCHIP_LINE_SHIFT;
+    uint64_t tag = generate_tag(addr);
     map<uint64_t, TriageOnchipEntry>& entry_map = entry_list[set_id];
     map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.find(tag);
 
@@ -92,7 +113,7 @@ int TriageOnchip::decrease_confidence(uint64_t addr)
     uint64_t set_id = get_set_id(addr);
     assert(set_id < num_sets);
     uint64_t line_offset = get_line_offset(addr);
-    uint64_t tag = addr >> 6 >> ONCHIP_LINE_SHIFT;
+    uint64_t tag = generate_tag(addr);
     map<uint64_t, TriageOnchipEntry>& entry_map = entry_list[set_id];
     map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.find(tag);
 
@@ -108,7 +129,7 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
     uint64_t set_id = get_set_id(prev_addr);
     assert(set_id < num_sets);
     uint64_t line_offset = get_line_offset(prev_addr);
-    uint64_t tag = prev_addr >> 6 >> ONCHIP_LINE_SHIFT;
+    uint64_t tag = generate_tag(prev_addr);
     map<uint64_t, TriageOnchipEntry>& entry_map = entry_list[set_id];
     map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.find(tag);
     debug_cout << hex << "update prev_addr: " << prev_addr
@@ -171,7 +192,7 @@ bool TriageOnchip::get_next_addr(uint64_t prev_addr, uint64_t &next_addr,
     uint64_t set_id = get_set_id(prev_addr);
     assert(set_id < num_sets);
     uint64_t line_offset = get_line_offset(prev_addr);
-    uint64_t tag = prev_addr >> 6 >> ONCHIP_LINE_SHIFT;
+    uint64_t tag = generate_tag(prev_addr);
     map<uint64_t, TriageOnchipEntry>& entry_map = entry_list[set_id];
     debug_cout << hex << "get_next_addr prev_addr: " << prev_addr
         << ", set_id: " << set_id

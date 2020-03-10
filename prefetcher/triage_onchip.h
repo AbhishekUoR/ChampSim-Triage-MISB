@@ -10,6 +10,10 @@
 
 #define ONCHIP_LINE_SIZE 1
 #define ONCHIP_LINE_SHIFT 0
+// This value is used for compressed tag in Triage to indicate the amount of
+// allowed bits for Triage's tag value.
+#define ONCHIP_TAG_BITS 11
+
 #define INVALID_ADDR 0xdeadbeef
 
 struct TriageConfig;
@@ -70,7 +74,7 @@ class TriageReplHawkeye : public TriageRepl
 //    std::vector<OPTgen> optgen;
     unsigned dynamic_optgen_choice;
     std::vector<std::vector<OPTgen> > sample_optgen;
-    std::map<uint64_t, ADDR_INFO> optgen_addr_history;
+    std::map<uint64_t, std::map<uint64_t, ADDR_INFO>> optgen_addr_history;
     std::map<uint64_t, uint64_t> signatures;
     std::map<uint64_t, uint32_t> hawkeye_pc_ps_hit_predictions;
     std::map<uint64_t, uint32_t> hawkeye_pc_ps_total_predictions;
@@ -97,16 +101,24 @@ class TriageReplPerfect : public TriageRepl
         uint64_t pickVictim(uint64_t set_id);
 };
 
+// A triage entry in a cache line (64B) containing 16 entries. Each entry is 4
+// bytes
+//struct TriageEntry {
+//};
+
 class TriageOnchip {
-    uint32_t num_sets, assoc;
+    uint32_t num_sets, assoc, log_num_sets;
     uint64_t index_mask;
     std::vector<std::map<uint64_t, TriageOnchipEntry> > entry_list;
     TriageReplType repl_type;
     TriageRepl *repl;
     bool use_dynamic_assoc;
+    bool use_compressed_tag;
 
     uint64_t get_set_id(uint64_t addr);
     uint64_t get_line_offset(uint64_t addr);
+
+    uint64_t generate_tag(uint64_t addr);
 
     public:
         TriageOnchip();

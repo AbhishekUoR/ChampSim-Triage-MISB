@@ -13,9 +13,10 @@ struct TriageConfig {
     int lookahead;
     int degree;
 
-    int on_chip_set, on_chip_assoc;
+    int on_chip_set, on_chip_assoc, log_on_chip_set;
     int training_unit_size;
     bool use_dynamic_assoc;
+    bool use_compressed_tag;
 
     TriageReplType repl;
 };

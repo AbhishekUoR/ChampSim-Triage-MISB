@@ -27,15 +27,14 @@ void CACHE::l2c_prefetcher_initialize()
     conf[cpu].degree = 1;
     conf[cpu].on_chip_assoc = 8;
     conf[cpu].training_unit_size = 10000000;
-//    conf[cpu].repl = TRIAGE_REPL_LRU;
     conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
-//    conf[cpu].repl = TRIAGE_REPL_PERFECT;
-//    conf[cpu].use_dynamic_assoc = true;
     conf[cpu].use_dynamic_assoc = false;
+    conf[cpu].use_compressed_tag = true;
     int assoc_config = ASSOC_CONFIG;
     int assoc = (assoc_config>>cpu) & 1;
     conf[cpu].on_chip_assoc = assoc?8:0;
     conf[cpu].on_chip_set = 32768;
+    conf[cpu].log_on_chip_set = 15;
     std::cout << "CPU " << cpu << " assoc: " << conf[cpu].on_chip_assoc << std::endl;
 
     data[cpu].set_conf(&conf[cpu]);
@@ -93,7 +92,6 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         if (!l2_hit && !llc_hit){
            ++actual_usage_count[addr]; 
         }
-#if 0
         int ret = prefetch_line(pc, addr, prefetch_addr_list[i], TRIAGE_FILL_LEVEL, md_in);
         if(ret)
         {
@@ -102,7 +100,6 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
             if(prefetched >= conf[cpu].degree)
                 break;
         }
-#endif
     }
 
     // Set cache assoc if dynamic
