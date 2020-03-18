@@ -32,6 +32,8 @@ struct TriageOnchipEntry {
     // policies, but can be used for other usages (like frequency in LFU）
     uint64_t rrpv;
 
+    // For Reeses uses, in non-reeses mode, these entries are not used.
+
     TriageOnchipEntry();
     void increase_confidence(unsigned);
     void decrease_confidence(unsigned);
@@ -114,6 +116,7 @@ class TriageOnchip {
     TriageRepl *repl;
     bool use_dynamic_assoc;
     bool use_compressed_tag;
+    bool use_reeses;
 
     uint64_t get_set_id(uint64_t addr);
     uint64_t get_line_offset(uint64_t addr);

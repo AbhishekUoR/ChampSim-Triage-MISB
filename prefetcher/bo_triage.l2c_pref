@@ -31,7 +31,9 @@ void CACHE::l2c_prefetcher_initialize() {
     conf[cpu].training_unit_size = 10000000;
     conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
     conf[cpu].use_dynamic_assoc = false;
-    conf[cpu].use_compressed_tag = false;
+    conf[cpu].use_compressed_tag = true;
+    conf[cpu].use_reeses = true;
+    conf[cpu].reeses_footprint = false;
     int assoc_config = ASSOC_CONFIG;
     int assoc = (assoc_config>>cpu) & 1;
     conf[cpu].on_chip_assoc = assoc?8:0;

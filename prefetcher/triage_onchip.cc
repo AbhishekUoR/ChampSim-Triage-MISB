@@ -54,6 +54,7 @@ void TriageOnchip::set_conf(TriageConfig *config)
     index_mask = num_sets - 1;
     use_dynamic_assoc = config->use_dynamic_assoc;
     use_compressed_tag = config->use_compressed_tag;
+    use_reeses = config->use_reeses;
 
     entry_list.resize(num_sets);
     repl = TriageRepl::create_repl(&entry_list, repl_type, assoc, use_dynamic_assoc);
