@@ -1,5 +1,10 @@
-
 #include "triage_reeses.h"
+
+#ifdef DEBUG
+#define debug_cout cerr << "[TRIAGE_REESES] "
+#else
+#define debug_cout if (0) cerr
+#endif
 
 void TriageReeses::set_conf(TriageConfig *config)
 {
@@ -12,7 +17,8 @@ void TriageReeses::set_conf(TriageConfig *config)
  * functions for simplicity's sake, so that you can get a general idea
  * of how to use the training unit.
  */
-void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit) {
+void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit)
+{
     // get new correlated pair from training unit
     TUEntry *result = tu.update(cur_pc, addr);
     if (result != nullptr) {
@@ -27,8 +33,7 @@ void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit) {
         if (!tu.FOOTPRINT && result->has_spatial) {
             uint64_t last_addr = result->spatial->last_address();
             TUEntry *link = new TUEntry(addr);
-            // TODO: Implement on-chip for Triage Reeses
-            on_chip_info->train(last_addr, link);
+            on_chip_data.update(last_addr, addr, cur_pc, true, link);
         }
         delete result;
     }
@@ -36,17 +41,14 @@ void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit) {
 
 void TriageReeses::predict(uint64_t pc, uint64_t addr, bool cache_hit)
 {
-    // TODO: implement
-#if 0
     uint64_t next_addr;
-    bool next_addr_exist = on_chip_data.get_next_addr(addr, next_addr, pc, false);
-    if (next_addr_exist) {
+    vector<uint64_t> predict_list = on_chip_data.get_next_addr(addr, pc, false);
+    for (uint64_t next_addr : predict_list) {
         debug_cout << hex << "Predict: " << addr << " " << next_addr << dec << endl;
         ++predict_count;
         next_addr_list.push_back(next_addr);
         assert(next_addr != addr);
     }
-#endif
 }
 
 

@@ -105,7 +105,7 @@ void Triage::train(uint64_t pc, uint64_t addr, bool cache_hit)
         training_unit.set_addr(pc, addr);
         return;
     }
-    uint64_t prev_addr, next_addr;
+    uint64_t prev_addr;
     bool prev_addr_exist = training_unit.get_last_addr(pc, prev_addr);
     if (prev_addr_exist) {
         if (prev_addr == addr) {
@@ -117,16 +117,16 @@ void Triage::train(uint64_t pc, uint64_t addr, bool cache_hit)
             debug_cout << hex << "New Addr: " << prev_addr << ", " << addr <<endl;
             ++new_addr;
 
-            bool next_addr_exists = on_chip_data.get_next_addr(prev_addr, next_addr, pc, false);
-            if (!next_addr_exists) {
-                on_chip_data.update(prev_addr, addr, pc, true);
+            vector<uint64_t> predict_list = on_chip_data.get_next_addr(prev_addr, pc, false);
+            if (predict_list.empty()) {
+                on_chip_data.update(prev_addr, addr, pc, true, nullptr);
                 ++no_next_addr;
-            } else if (next_addr != addr) {
+            } else if (find(predict_list.begin(), predict_list.end(), addr) == predict_list.end()) {
                 int conf = on_chip_data.decrease_confidence(prev_addr);
                 ++conf_dec_retain;
                 if (conf == 0) {
                     ++conf_dec_update;
-                    on_chip_data.update(prev_addr, addr, pc, false);
+                    on_chip_data.update(prev_addr, addr, pc, false, nullptr);
                 }
             } else {
                 on_chip_data.increase_confidence(prev_addr);
@@ -145,8 +145,8 @@ void Triage::train(uint64_t pc, uint64_t addr, bool cache_hit)
 void Triage::predict(uint64_t pc, uint64_t addr, bool cache_hit)
 {
     uint64_t next_addr;
-    bool next_addr_exist = on_chip_data.get_next_addr(addr, next_addr, pc, false);
-    if (next_addr_exist) {
+    vector<uint64_t> predict_list = on_chip_data.get_next_addr(addr, pc, false);
+    for (uint64_t next_addr : predict_list) {
         debug_cout << hex << "Predict: " << addr << " " << next_addr << dec << endl;
         ++predict_count;
         next_addr_list.push_back(next_addr);

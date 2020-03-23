@@ -55,6 +55,12 @@ struct TUEntry {
         temporal(0), conf(INIT_CONF), has_spatial(false), spatial(nullptr) {}
     TUEntry(uint64_t addr) :
         temporal(addr), conf(INIT_CONF), has_spatial(false), spatial(nullptr) {}
+    TUEntry(const TUEntry& entry) {
+        temporal = entry.temporal;
+        conf = entry.conf;
+        has_spatial = entry.has_spatial;
+        spatial = entry.spatial->clone();
+    }
 };
 
 /* similar to ISB's training unit

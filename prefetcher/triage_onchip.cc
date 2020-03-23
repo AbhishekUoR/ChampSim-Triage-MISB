@@ -122,7 +122,7 @@ int TriageOnchip::decrease_confidence(uint64_t addr)
     return it->second.confidence[line_offset];
 }
 
-void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl)
+void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl, TUEntry* reeses_entry)
 {
     if (use_dynamic_assoc) {
         assoc = repl->get_assoc();
@@ -149,7 +149,10 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
             entry_map.erase(victim_addr);
         }
         if (assoc > 0) {
-            it->second.next_addr[line_offset] = next_addr;
+            if (use_reeses)
+                it->second.reeses_next_addr[line_offset] = *reeses_entry;
+            else
+                it->second.next_addr[line_offset] = next_addr;
             it->second.valid[line_offset] = true;
         }
         if(update_repl)
@@ -164,7 +167,10 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
         assert(!entry_map.count(tag));
         if (assoc > 0) {
             entry_map[tag].init();
-            entry_map[tag].next_addr[line_offset] = next_addr;
+            if (use_reeses)
+                entry_map[tag].reeses_next_addr[line_offset] = *reeses_entry;
+            else
+                entry_map[tag].next_addr[line_offset] = next_addr;
             entry_map[tag].confidence[line_offset] = 3;
             entry_map[tag].valid[line_offset] = true;
         }
@@ -184,9 +190,10 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
     assert(entry_map.size() <= assoc);
 }
 
-bool TriageOnchip::get_next_addr(uint64_t prev_addr, uint64_t &next_addr,
+vector<uint64_t> TriageOnchip::get_next_addr(uint64_t prev_addr,
         uint64_t pc, bool update_stats)
 {
+    vector<uint64_t> result;
     if (use_dynamic_assoc) {
         assoc = repl->get_assoc();
     }
@@ -204,14 +211,23 @@ bool TriageOnchip::get_next_addr(uint64_t prev_addr, uint64_t &next_addr,
     map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.find(tag);
 
     if (it != entry_map.end() && (it->second.valid[line_offset])) {
-        next_addr = it->second.next_addr[line_offset];
+        if (use_reeses) {
+            TUEntry* entry = &it->second.reeses_next_addr[line_offset];
+            assert(entry != NULL);
+            if (entry->has_spatial) {
+                SpatialPattern* pattern = entry->spatial;
+                result = pattern->predict(prev_addr);
+            } else {
+                result.push_back(entry->temporal);
+            }
+        } else {
+            result.push_back(it->second.next_addr[line_offset]);
+        }
         if (update_stats) {
             repl->addEntry(set_id, tag, pc);
         }
-        return true;
-    } else {
-        return false;
     }
+    return result;
 }
 
 uint32_t TriageOnchip::get_assoc()

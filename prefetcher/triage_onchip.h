@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "optgen_simple.h"
 #include "isb_hawkeye_predictor.h"
+#include "reeses_training_unit.h"
 
 #define ONCHIP_LINE_SIZE 1
 #define ONCHIP_LINE_SHIFT 0
@@ -26,6 +27,7 @@ enum TriageReplType {
 
 struct TriageOnchipEntry {
     uint64_t next_addr[ONCHIP_LINE_SIZE];
+    TUEntry reeses_next_addr[ONCHIP_LINE_SIZE];
     int confidence[ONCHIP_LINE_SIZE];
     bool valid[ONCHIP_LINE_SIZE];
     // Used for replacement policy, it is rrpv for rrpv-based replacement
@@ -105,8 +107,6 @@ class TriageReplPerfect : public TriageRepl
 
 // A triage entry in a cache line (64B) containing 16 entries. Each entry is 4
 // bytes
-//struct TriageEntry {
-//};
 
 class TriageOnchip {
     uint32_t num_sets, assoc, log_num_sets;
@@ -127,8 +127,8 @@ class TriageOnchip {
         TriageOnchip();
         void set_conf(TriageConfig *config);
 
-        void update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl);
-        bool get_next_addr(uint64_t prev_addr, uint64_t &next_addr, uint64_t pc, bool update_stats);
+        void update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl, TUEntry* reeses_entry);
+        vector<uint64_t> get_next_addr(uint64_t prev_addr, uint64_t pc, bool update_stats);
         int increase_confidence(uint64_t addr);
         int decrease_confidence(uint64_t addr);
 

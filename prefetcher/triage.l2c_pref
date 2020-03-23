@@ -1,8 +1,10 @@
 
-#include "cache.h"
-#include "triage.h"
-#include "rap.h"
 #include <map>
+
+#include "cache.h"
+#include "rap.h"
+#include "triage.h"
+#include "triage_reeses.h"
 
 using namespace std;
 
@@ -11,7 +13,7 @@ using namespace std;
 #define RAH_SHARED_CACHE
 
 TriageConfig conf[NUM_CPUS];
-Triage data[NUM_CPUS];
+TriageBase* prefetchers[NUM_CPUS];
 RAH rah(2048);
 uint64_t last_address[NUM_CPUS];
 
@@ -29,7 +31,7 @@ void CACHE::l2c_prefetcher_initialize()
     conf[cpu].training_unit_size = 10000000;
     conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
     conf[cpu].use_dynamic_assoc = false;
-    conf[cpu].use_compressed_tag = true;
+    conf[cpu].use_compressed_tag = false;
     conf[cpu].use_reeses = true;
     conf[cpu].reeses_footprint = false;
     int assoc_config = ASSOC_CONFIG;
@@ -39,7 +41,11 @@ void CACHE::l2c_prefetcher_initialize()
     conf[cpu].log_on_chip_set = 15;
     std::cout << "CPU " << cpu << " assoc: " << conf[cpu].on_chip_assoc << std::endl;
 
-    data[cpu].set_conf(&conf[cpu]);
+    if (conf[cpu].use_reeses)
+        prefetchers[cpu] = new TriageReeses;
+    else
+        prefetchers[cpu] = new Triage;
+    prefetchers[cpu]->set_conf(&conf[cpu]);
 }
 
 uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
@@ -68,7 +74,7 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     for (i = 0; i < MAX_ALLOWED_DEGREE; ++i) {
         prefetch_addr_list[i] = 0;
     }
-    data[cpu].calculatePrefetch(pc, addr, cache_hit, prefetch_addr_list,
+    prefetchers[cpu]->calculatePrefetch(pc, addr, cache_hit, prefetch_addr_list,
             MAX_ALLOWED_DEGREE, cpu);
 
     int prefetched = 0;
@@ -105,10 +111,10 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     }
 
     // Set cache assoc if dynamic
-    //cout << "LLC WAY: " << LLC_WAY << ", ASSOC: " << data[cpu].get_assoc() << endl;
+    //cout << "LLC WAY: " << LLC_WAY << ", ASSOC: " << prefetchers[cpu]->get_assoc() << endl;
     unsigned total_assoc = 0;
     for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
-        total_assoc += data[mycpu].get_assoc();
+        total_assoc += prefetchers[mycpu]->get_assoc();
     }
     total_assoc /= NUM_CPUS;
     assert(total_assoc < LLC_WAY);
@@ -121,12 +127,12 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
 
 uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint64_t metadata_in)
 {
-    if(prefetch) {
-        uint64_t next_addr;
-        bool next_addr_exists = data[cpu].on_chip_data.get_next_addr(metadata_in, next_addr, 0, true);
+//    if(prefetch) {
+//        uint64_t next_addr;
+//        bool next_addr_exists = prefetchers[cpu]->on_chip_data.get_next_addr(metadata_in, next_addr, 0, true);
         //assert(next_addr_exists);
 //        cout << "Filled " << hex << addr << "  by " << metadata_in << " " << next_addr_exists << endl;
-    }
+//    }
     return metadata_in;
 }
 
@@ -135,7 +141,7 @@ void CACHE::l2c_prefetcher_final_stats()
  //   cpu = 0;
     cout << "CPU " << cpu << " TRIAGE Stats:" << endl;
 
-    data[cpu].print_stats();
+    prefetchers[cpu]->print_stats();
 
     std::map<uint64_t, uint64_t> total_pref_count;
     std::map<uint64_t, uint64_t> actual_pref_count;
