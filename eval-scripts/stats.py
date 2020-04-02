@@ -53,6 +53,10 @@ class Stat:
                 if res != None:
                     stat['triage_predict_count'] = int(res.group(1))
 
+                res = re.match('OnChipEntrySize=(\d+)', line)
+                if res != None:
+                    stat['triage_onchip_entry_size'] = int(res.group(1))
+
                 res = re.match('SAMPLEOPTGEN 1 accesses: (\d+), hits: (\d+), traffic: (\d+), hit rate: (\d+(\.\d+))', line)
                 if res != None:
                     stat['sample_optgen_hit_rate'] = float(res.group(4))
@@ -60,6 +64,14 @@ class Stat:
                 res = re.match('total_assoc=(\d+)', line)
                 if res != None:
                     stat['triage_total_assoc'] = int(res.group(1))
+
+                res = re.match('TemporalUpdate=(\d+)', line)
+                if res != None:
+                    stat['triage_temporal_update'] = int(res.group(1))
+
+                res = re.match('SpatialUpdate=(\d+)', line)
+                if res != None:
+                    stat['triage_spatial_update'] = int(res.group(1))
 
                 res = re.match('ISB_nb_(\w+)=(\d+)', line)
                 if res != None:
@@ -174,6 +186,12 @@ class Stat:
             stat['triage_average_assoc'] = float(stat['triage_total_assoc']) / float(stat['triage_trigger_count'])
         except:
             None
+        if 'triage_onchip_entry_size' not in stat:
+            stat['triage_onchip_entry_size'] = 0
+        if 'triage_spatial_update' not in stat:
+            stat['triage_spatial_update'] = 0
+        if 'triage_temporal_update' not in stat:
+            stat['triage_temporal_update'] = 0
 
         self.stat = stat
         self.error = error

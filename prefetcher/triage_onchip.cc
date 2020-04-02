@@ -238,6 +238,11 @@ uint32_t TriageOnchip::get_assoc()
 void TriageOnchip::print_stats()
 {
     assert(repl != NULL);
+    size_t entry_size = 0;
+    for (auto& m : entry_list) {
+        entry_size += m.size();
+    }
+    cout << "OnChipEntrySize=" << entry_size << endl;
     repl->print_stats();
 }
 

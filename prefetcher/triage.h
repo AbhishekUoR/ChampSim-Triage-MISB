@@ -41,7 +41,7 @@ class TriageBase {
 
         TriageBase();
         virtual void set_conf(TriageConfig *config);
-        void print_stats();
+        virtual void print_stats();
         uint32_t get_assoc();
         virtual void calculatePrefetch(uint64_t pc, uint64_t addr,
                 bool cache_hit, uint64_t *prefetch_list,
