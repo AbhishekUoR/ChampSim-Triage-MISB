@@ -34,7 +34,7 @@ class TriageBase {
 
         std::vector<uint64_t> next_addr_list;
         virtual void train(uint64_t pc, uint64_t addr, bool hit) = 0;
-        virtual void predict(uint64_t pc, uint64_t addr, bool hit) = 0;
+        virtual void predict(uint64_t pc, uint64_t addr, bool hit);
 
     public:
         TriageOnchip on_chip_data;
@@ -53,7 +53,6 @@ class Triage : public TriageBase {
         TriageTrainingUnit training_unit;
     protected:
         virtual void train(uint64_t pc, uint64_t addr, bool hit) override;
-        virtual void predict(uint64_t pc, uint64_t addr, bool hit) override;
     public:
         Triage();
         virtual void set_conf(TriageConfig *config) override;
