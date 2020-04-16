@@ -63,14 +63,14 @@ void TriageOnchip::set_conf(TriageConfig *config)
 
 uint64_t TriageOnchip::get_line_offset(uint64_t addr)
 {
-    uint64_t line_offset = (addr>>6) & (ONCHIP_LINE_SIZE-1);
+    uint64_t line_offset = addr & (ONCHIP_LINE_SIZE-1);
     return line_offset;
 }
 
 
 uint64_t TriageOnchip::get_set_id(uint64_t addr)
 {
-    uint64_t set_id = (addr>>6>>ONCHIP_LINE_SHIFT) & index_mask;
+    uint64_t set_id = (addr>>ONCHIP_LINE_SHIFT) & index_mask;
     debug_cout << "num_sets: " << num_sets << ", index_mask: " << index_mask
         << ", set_id: " << set_id <<endl;
     assert(set_id < num_sets);
@@ -79,7 +79,7 @@ uint64_t TriageOnchip::get_set_id(uint64_t addr)
 
 uint64_t TriageOnchip::generate_tag(uint64_t addr)
 {
-    uint64_t tag = addr >> 6 >> ONCHIP_LINE_SHIFT;
+    uint64_t tag = addr >> ONCHIP_LINE_SHIFT;
     if (use_compressed_tag) {
         uint64_t compressed_tag = 0;
         uint64_t mask = ((1ULL << ONCHIP_TAG_BITS) - 1);
@@ -202,13 +202,15 @@ vector<uint64_t> TriageOnchip::get_next_addr(uint64_t prev_addr,
     uint64_t line_offset = get_line_offset(prev_addr);
     uint64_t tag = generate_tag(prev_addr);
     map<uint64_t, TriageOnchipEntry>& entry_map = entry_list[set_id];
+    map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.find(tag);
+
     debug_cout << hex << "get_next_addr prev_addr: " << prev_addr
         << ", set_id: " << set_id
         << ", tag: " << tag
         << ", pc: " << pc
+        << ", found: " << (it != entry_map.end())
+        << ", valid: " << (it->second.valid[line_offset])
         << endl;
-
-    map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.find(tag);
 
     if (it != entry_map.end() && (it->second.valid[line_offset])) {
         if (use_reeses) {
@@ -216,8 +218,10 @@ vector<uint64_t> TriageOnchip::get_next_addr(uint64_t prev_addr,
             assert(entry != NULL);
             if (entry->has_spatial) {
                 SpatialPattern* pattern = entry->spatial;
+                debug_cout << "Spatial Entry Found: " << *pattern << endl;
                 result = pattern->predict(prev_addr);
             } else {
+                debug_cout << "Temporal Entry Found: " << entry->temporal << endl;
                 result.push_back(entry->temporal);
             }
         } else {

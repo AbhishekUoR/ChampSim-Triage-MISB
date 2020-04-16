@@ -27,12 +27,12 @@ void TriageReeses::set_conf(TriageConfig *config)
  */
 void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit)
 {
-    addr >>= 6;
     // get new correlated pair from training unit
     // result contains last entry (spatial/temporal from the same pc)
     // Connect from last entry to current entry
     TUEntry *result = tu.update(cur_pc, addr);
     if (result != nullptr) {
+        ++new_addr;
         uint64_t trigger = result->temporal;
         if (!result->has_spatial) {
             // correct ordering for temporal entries
@@ -54,6 +54,8 @@ void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit)
             on_chip_data.update(trigger, addr, cur_pc, true, result->clone());
         }
         delete result;
+    } else {
+        ++same_addr;
     }
 }
 
@@ -64,7 +66,7 @@ void TriageReeses::predict(uint64_t pc, uint64_t addr, bool cache_hit)
     for (uint64_t next_addr : predict_list) {
         debug_cout << hex << "Predict: " << addr << " " << next_addr << dec << endl;
         ++predict_count;
-        next_addr_list.push_back(next_addr<<6);
+        next_addr_list.push_back(next_addr);
         assert(next_addr != addr);
     }
 }

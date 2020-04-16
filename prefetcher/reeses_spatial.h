@@ -28,6 +28,11 @@ struct SpatialPattern {
     /* creates a clone of the spatial pattern */
     virtual SpatialPattern *clone() const = 0;
     virtual ~SpatialPattern() {};
+    virtual void print(ostream&) const = 0;
+    friend std::ostream& operator <<(std::ostream &os, const SpatialPattern &other) {
+        other.print(os);
+        return os;
+    }
 };
 
 /* a spatial pattern defined by a delta and a length
@@ -85,9 +90,8 @@ struct DeltaPattern : public SpatialPattern {
         return result;
     }
 
-    friend std::ostream& operator <<(std::ostream &os, const DeltaPattern &other) {
-        os << "delta " << other.delta << " with length " << other.length;
-        return os;
+    void print(ostream& os) const override {
+        os << "delta " << delta << " with length " << length;
     }
 };
 
@@ -183,10 +187,9 @@ struct Footprint : public SpatialPattern {
         return result;
     }
 
-    friend std::ostream &operator <<(std::ostream &os, const Footprint &other) {
+    void print(ostream& os) const override {
         for (uint32_t i = 0; i < REGION_SIZE; i++) 
-            os << other.bitmap[i];
-        return os;
+            os << bitmap[i];
     }
 };
 

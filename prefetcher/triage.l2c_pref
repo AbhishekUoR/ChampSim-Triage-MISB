@@ -9,7 +9,7 @@
 using namespace std;
 
 #define TRIAGE_FILL_LEVEL FILL_L2
-#define MAX_ALLOWED_DEGREE 8
+#define MAX_ALLOWED_DEGREE 1000
 #define RAH_SHARED_CACHE
 
 TriageConfig conf[NUM_CPUS];
@@ -26,7 +26,7 @@ void CACHE::l2c_prefetcher_initialize()
 {
     cout << NUM_CPUS << endl;
     conf[cpu].lookahead = 1;
-    conf[cpu].degree = 1;
+    conf[cpu].degree = 1000;
     conf[cpu].on_chip_assoc = 8;
     conf[cpu].training_unit_size = 10000000;
     conf[cpu].repl = TRIAGE_REPL_HAWKEYE;

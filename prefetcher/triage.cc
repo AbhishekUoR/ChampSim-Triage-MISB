@@ -63,12 +63,11 @@ void TriageBase::calculatePrefetch(uint64_t pc, uint64_t addr,
     bool cache_hit, uint64_t *prefetch_list, int max_degree,
     uint64_t cpu)
 {
-    // XXX Only allow lookahead = 1 and degree=1 for now
+    // XXX Only allow lookahead = 1 for now
     assert(lookahead == 1);
-    assert(degree == 1);
-
     assert(degree <= max_degree);
 
+    addr = addr >> 6;
     
     if (pc == 0) return; //TODO: think on how to handle prefetches from lower level
 
@@ -86,9 +85,10 @@ void TriageBase::calculatePrefetch(uint64_t pc, uint64_t addr,
     train(pc, addr, cache_hit);
 
     for (size_t i = 0; i < degree && i < next_addr_list.size(); ++i) {
-        prefetch_list[i] = next_addr_list[i];
+        prefetch_list[i] = next_addr_list[i] << 6;
     }
 }
+
 Triage::Triage()
 {
 }
