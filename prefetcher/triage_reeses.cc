@@ -61,7 +61,24 @@ void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit)
 
 void TriageReeses::predict(uint64_t pc, uint64_t addr, bool cache_hit)
 {
-    TriageBase::predict(pc, addr, cache_hit);
+    uint64_t next_addr;
+    vector<uint64_t> temp_list;
+    deque<uint64_t> predict_list;
+    assert(next_addr_list.size() == 0);
+    predict_list.push_back(addr);
+    while (next_addr_list.size() < degree && !predict_list.empty()) {
+        addr = predict_list.front();
+        predict_list.pop_front();
+        temp_list = on_chip_data.get_next_addr(addr, pc, false);
+        for (uint64_t next_addr : temp_list) {
+            debug_cout << hex << "Predict: " << addr << " " << next_addr << dec << endl;
+            next_addr_list.push_back(next_addr);
+            predict_list.push_back(next_addr);
+        }
+    }
+    if (!next_addr_list.empty()) {
+        ++predict_count;
+    }
 }
 
 void TriageReeses::print_stats()
