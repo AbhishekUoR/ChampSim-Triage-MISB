@@ -12,6 +12,7 @@
 struct TriageConfig {
     int lookahead;
     int degree;
+    int prefetch_queue_degree;
 
     int on_chip_set, on_chip_assoc, log_on_chip_set;
     int training_unit_size;
@@ -26,7 +27,7 @@ struct TriageConfig {
 
 class TriageBase {
     protected:
-        int lookahead, degree;
+        int lookahead, degree, prefetch_queue_degree;
         bool use_layer_prediction;
         // Stats
         uint64_t same_addr, new_addr, new_stream;
@@ -34,7 +35,7 @@ class TriageBase {
         uint64_t predict_count, trigger_count;
         uint64_t total_assoc;
 
-        std::vector<uint64_t> next_addr_list;
+        std::map<uint64_t, std::deque<uint64_t>> prefetch_queue;
         virtual void train(uint64_t pc, uint64_t addr, bool hit) = 0;
         virtual void predict(uint64_t pc, uint64_t addr, bool hit);
 

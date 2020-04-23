@@ -27,6 +27,7 @@ void CACHE::l2c_prefetcher_initialize()
     cout << NUM_CPUS << endl;
     conf[cpu].lookahead = 1;
     conf[cpu].degree = 1000;
+    conf[cpu].prefetch_queue_degree = 1000;
     conf[cpu].on_chip_assoc = 8;
     conf[cpu].training_unit_size = 10000000;
     conf[cpu].repl = TRIAGE_REPL_HAWKEYE;

@@ -34,6 +34,7 @@ void TriageBase::set_conf(TriageConfig *config)
     assert(config != NULL);
     lookahead = config->lookahead;
     degree = config->degree;
+    prefetch_queue_degree = config->prefetch_queue_degree;
     use_layer_prediction = config->use_layer_prediction;
 
     on_chip_data.set_conf(config);
@@ -75,7 +76,6 @@ void TriageBase::calculatePrefetch(uint64_t pc, uint64_t addr,
     debug_cout << hex << "Trigger: pc: " << pc << ", addr: "
         << addr << dec << " " << cache_hit << endl;
 
-    next_addr_list.clear();
     ++trigger_count;
     total_assoc+=get_assoc();
 
@@ -85,7 +85,7 @@ void TriageBase::calculatePrefetch(uint64_t pc, uint64_t addr,
     // Train
     train(pc, addr, cache_hit);
 
-    for (size_t i = 0; i < degree && i < next_addr_list.size(); ++i) {
+    for (size_t i = 0; i < degree ; ++i) {
         prefetch_list[i] = next_addr_list[i] << 6;
     }
 }
