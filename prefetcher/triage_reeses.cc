@@ -64,21 +64,18 @@ void TriageReeses::predict(uint64_t pc, uint64_t addr, bool cache_hit)
     uint64_t next_addr;
     vector<uint64_t> temp_list;
     deque<uint64_t> predict_list;
-    assert(next_addr_list.size() == 0);
     predict_list.push_back(addr);
-    while (next_addr_list.size() < degree && !predict_list.empty()) {
+    while (prefetch_queue[pc].size() < degree && !predict_list.empty()) {
         addr = predict_list.front();
         predict_list.pop_front();
         temp_list = on_chip_data.get_next_addr(addr, pc, false);
         for (uint64_t next_addr : temp_list) {
             debug_cout << hex << "Predict: " << addr << " " << next_addr << dec << endl;
-            next_addr_list.push_back(next_addr);
+            prefetch_queue[pc].push_back(next_addr);
+            ++predict_count;
             if (use_layer_prediction)
                 predict_list.push_back(next_addr);
         }
-    }
-    if (!next_addr_list.empty()) {
-        ++predict_count;
     }
 }
 
