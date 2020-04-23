@@ -18,6 +18,7 @@ struct TriageConfig {
     bool use_dynamic_assoc;
     bool use_compressed_tag;
     bool use_reeses;
+    bool use_layer_prediction;
     bool reeses_footprint;
 
     TriageReplType repl;
@@ -26,6 +27,7 @@ struct TriageConfig {
 class TriageBase {
     protected:
         int lookahead, degree;
+        bool use_layer_prediction;
         // Stats
         uint64_t same_addr, new_addr, new_stream;
         uint64_t no_next_addr, conf_dec_retain, conf_dec_update, conf_inc;

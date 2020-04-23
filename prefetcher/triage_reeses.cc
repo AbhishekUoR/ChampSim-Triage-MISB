@@ -73,7 +73,8 @@ void TriageReeses::predict(uint64_t pc, uint64_t addr, bool cache_hit)
         for (uint64_t next_addr : temp_list) {
             debug_cout << hex << "Predict: " << addr << " " << next_addr << dec << endl;
             next_addr_list.push_back(next_addr);
-            predict_list.push_back(next_addr);
+            if (use_layer_prediction)
+                predict_list.push_back(next_addr);
         }
     }
     if (!next_addr_list.empty()) {
