@@ -39,6 +39,10 @@ void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit)
             result->temporal = addr;
             //temporal_counts[cur_pc] += 1;
         }
+        debug_cout << "Update Temporal: " << trigger << " To " << addr << " @PC "
+            << cur_pc << endl;
+        ++temporal_update;
+        on_chip_data.update(trigger, addr, cur_pc, true, result->clone());
         // link end of spatials to next temporal
         if (!tu.FOOTPRINT && result->has_spatial) {
             uint64_t last_addr = result->spatial->last_address();
@@ -48,10 +52,6 @@ void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit)
             ++spatial_update;
             on_chip_data.update(last_addr, addr, cur_pc, true, link);
         } else {
-            debug_cout << "Update Temporal: " << trigger << " To " << addr << " @PC "
-                << cur_pc << endl;
-            ++temporal_update;
-            on_chip_data.update(trigger, addr, cur_pc, true, result->clone());
         }
         delete result;
     } else {
