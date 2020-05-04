@@ -15,6 +15,8 @@ using namespace std;
 #define debug_cout if (0) cerr
 #endif
 
+//#define PRINT_TRIAGE_REPL_DETAIL
+
 unsigned hawkeye_sample_assoc[] = {4,8};
 
 TriageRepl::TriageRepl(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list)
@@ -287,8 +289,10 @@ void TriageReplHawkeye::choose_optgen()
     } else {
         dynamic_optgen_choice = 2;
     }
+#ifdef PRINT_TRIAGE_REPL_DETAIL
     cout << "hit_rate[0]: " << hit_rate[0] << ", hit_rate[1]: " << hit_rate[1] << ", dynamic_optgen_choice: "
         << dynamic_optgen_choice << endl;
+#endif
 }
 
 uint32_t TriageReplHawkeye::get_assoc()

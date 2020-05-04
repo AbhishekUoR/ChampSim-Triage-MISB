@@ -63,8 +63,7 @@ void TriageBase::print_stats()
 }
 
 void TriageBase::calculatePrefetch(uint64_t pc, uint64_t addr,
-    bool cache_hit, uint64_t *prefetch_list, int max_degree,
-    uint64_t cpu)
+    bool cache_hit, int max_degree, uint64_t cpu)
 {
     // XXX Only allow lookahead = 1 for now
     assert(lookahead == 1);
@@ -86,12 +85,23 @@ void TriageBase::calculatePrefetch(uint64_t pc, uint64_t addr,
     // Train
     train(pc, addr, cache_hit);
 
+    /*
     for (size_t i = 0; i < prefetch_queue_degree ; ++i) {
         if (prefetch_queue[pc].empty())
             break;
         prefetch_list[i] = prefetch_queue[pc].front() << 6;
         prefetch_queue[pc].pop_front();
-    }
+    }*/
+}
+
+uint64_t TriageBase::getNextPrefetchAddr(uint64_t pc, uint64_t addr)
+{
+    uint64_t pref_addr = 0;
+    if (prefetch_queue[pc].empty())
+        return 0;
+    pref_addr = prefetch_queue[pc].front() << 6;
+    prefetch_queue[pc].pop_front();
+    return pref_addr;
 }
 
 Triage::Triage()

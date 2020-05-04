@@ -51,7 +51,6 @@ void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit)
                 << cur_pc << endl;
             ++spatial_update;
             on_chip_data.update(last_addr, addr, cur_pc, true, link);
-        } else {
         }
         delete result;
     } else {
