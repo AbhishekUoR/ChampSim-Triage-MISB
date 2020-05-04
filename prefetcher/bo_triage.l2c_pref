@@ -6,8 +6,9 @@
 #include "triage.h"
 #include "triage_reeses.h"
 
+using namespace std;
 #define TRIAGE_FILL_LEVEL FILL_L2
-#define MAX_ALLOWED_DEGREE 8
+#define MAX_ALLOWED_DEGREE 1000
 #define RAH_SHARED_CACHE
 
 #define BO_DEGREE 1
@@ -23,6 +24,8 @@ std::set<uint64_t>unique_addr;
 std::map<uint64_t, uint64_t> total_usage_count;
 std::map<uint64_t, uint64_t> actual_usage_count;
 
+uint64_t nominal_prefetches, actual_prefetches;
+
 void CACHE::l2c_prefetcher_initialize() {
 	bo_l2c_prefetcher_initialize();
     cout << NUM_CPUS << endl;
@@ -34,7 +37,9 @@ void CACHE::l2c_prefetcher_initialize() {
     conf[cpu].use_dynamic_assoc = false;
     conf[cpu].use_compressed_tag = false;
     conf[cpu].use_reeses = false;
+    conf[cpu].use_layer_prediction = false;
     conf[cpu].reeses_footprint = false;
+    conf[cpu].regular_on_compulsory = false;
     int assoc_config = ASSOC_CONFIG;
     int assoc = (assoc_config>>cpu) & 1;
     conf[cpu].on_chip_assoc = assoc?8:0;
@@ -48,6 +53,8 @@ void CACHE::l2c_prefetcher_initialize() {
     else
         prefetchers[cpu] = new Triage;
     prefetchers[cpu]->set_conf(&conf[cpu]);
+
+    nominal_prefetches = 0, actual_prefetches = 0;
 }
 
 uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
@@ -58,8 +65,7 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     uint64_t bo_target_addr = 0;
     bo_l2c_prefetcher_operate(addr, pc, cache_hit, type, this, &bo_trigger_addr, &bo_target_offset, cpu);
 
-    if (bo_trigger_addr && bo_target_offset) {
-
+    if (!conf[cpu].regular_on_compulsory && bo_trigger_addr && bo_target_offset) {
         for(unsigned int i=1; i<=BO_DEGREE; i++) {
             bo_target_addr = bo_trigger_addr + (i*bo_target_offset); 
             bo_issue_prefetcher(this, pc, bo_trigger_addr, bo_target_addr, TRIAGE_FILL_LEVEL, PF_CROSS_PAGE);
@@ -85,26 +91,20 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     unique_addr.insert(addr);
 
     int i;
-    uint64_t prefetch_addr_list[MAX_ALLOWED_DEGREE];
-    for (i = 0; i < MAX_ALLOWED_DEGREE; ++i) {
-        prefetch_addr_list[i] = 0;
-    }
-    prefetchers[cpu]->calculatePrefetch(pc, addr, cache_hit, prefetch_addr_list,
-            MAX_ALLOWED_DEGREE, cpu);
-
+    prefetchers[cpu]->calculatePrefetch(pc, addr, cache_hit, MAX_ALLOWED_DEGREE, cpu);
     int prefetched = 0;
     for (i = 0; i < MAX_ALLOWED_DEGREE; ++i) {
-        if (prefetch_addr_list[i] == 0) {
+        uint64_t pref_addr = prefetchers[cpu]->getNextPrefetchAddr(pc, addr);
+        if (pref_addr == 0)
             break;
-        }
 #ifdef RAH_SHARED_CACHE
-        rah.add_access(prefetch_addr_list[i], pc, 0, true);
+        rah.add_access(pref_addr, pc, 0, true);
 #else
-        rah.add_access(prefetch_addr_list[i], pc, cpu, true);
+        rah.add_access(pref_addr, pc, cpu, true);
 #endif
         PACKET test_packet;
-        test_packet.address = prefetch_addr_list[i] >> LOG2_BLOCK_SIZE;
-        test_packet.full_addr = prefetch_addr_list[i];
+        test_packet.address = pref_addr >> LOG2_BLOCK_SIZE;
+        test_packet.full_addr = pref_addr;
         bool llc_hit = static_cast<CACHE*>(lower_level)->check_hit(&test_packet) != -1;
         bool l2_hit = check_hit(&test_packet) != -1;
         //cout << "addr: " << addr << ", cache_hit: " << int(cache_hit) << ", llc_hit: " << llc_hit << endl;
@@ -115,12 +115,13 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         if (!l2_hit && !llc_hit){
            ++actual_usage_count[addr]; 
         }
-        int ret = prefetch_line(pc, addr, prefetch_addr_list[i], TRIAGE_FILL_LEVEL, md_in);
+        ++nominal_prefetches;
+        int ret = prefetch_line(pc, addr, pref_addr, TRIAGE_FILL_LEVEL, md_in);
         if(ret)
         {
- //           cout << hex << addr << " " << prefetch_addr_list[i] << dec << endl;
-            prefetched++;
-            if(prefetched >= conf[cpu].degree)
+ //           cout << hex << addr << " " << pref_addr << dec << endl;
+            ++actual_prefetches;
+            if(++prefetched >= conf[cpu].degree)
                 break;
         }
     }

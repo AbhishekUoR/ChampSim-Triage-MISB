@@ -8,7 +8,7 @@ PREFETCH_FILTER FILTER;
 GLOBAL_REGISTER GHR;
 
 // Hao: Define some stats for evaluating SPP perf
-#define DEGREE 8
+#define DEGREE 1
 #define MAX_DEGREE 10000
 uint64_t prefetch_issue_count[MAX_DEGREE];
 uint64_t prefetch_success_count[MAX_DEGREE];

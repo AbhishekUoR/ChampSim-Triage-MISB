@@ -21,6 +21,7 @@ struct TriageConfig {
     bool use_reeses;
     bool use_layer_prediction;
     bool reeses_footprint;
+    bool regular_on_compulsory;
 
     TriageReplType repl;
 };
