@@ -8,6 +8,7 @@
 class TriageReeses : public TriageBase {
     private:
         uint64_t temporal_update, spatial_update;
+        bool perfect_trigger;
 
         ReesesTrainingUnit tu;
     public:

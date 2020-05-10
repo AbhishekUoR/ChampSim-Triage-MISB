@@ -18,6 +18,7 @@ void TriageReeses::set_conf(TriageConfig *config)
 {
     TriageBase::set_conf(config);
     tu.FOOTPRINT = config->reeses_footprint;
+    perfect_trigger = config->reeses_perfect_trigger;
 }
 
 /* This is the main training function for Reeses,
@@ -44,7 +45,7 @@ void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit)
         ++temporal_update;
         on_chip_data.update(trigger, addr, cur_pc, true, result->clone());
         // link end of spatials to next temporal
-        if (!tu.FOOTPRINT && result->has_spatial) {
+        if ((perfect_trigger || !tu.FOOTPRINT) && result->has_spatial) {
             uint64_t last_addr = result->spatial->last_address();
             TUEntry *link = new TUEntry(addr);
             debug_cout << "Update Spatial: " << last_addr << " To " << addr << " @PC "

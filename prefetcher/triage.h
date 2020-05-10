@@ -9,6 +9,7 @@
 #include "triage_training_unit.h"
 #include "triage_onchip.h"
 
+
 struct TriageConfig {
     int lookahead;
     int degree;
@@ -22,6 +23,7 @@ struct TriageConfig {
     bool use_layer_prediction;
     bool reeses_footprint;
     bool regular_on_compulsory;
+    bool reeses_perfect_trigger;
 
     TriageReplType repl;
 };

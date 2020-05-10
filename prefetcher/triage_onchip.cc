@@ -187,7 +187,7 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
         << ", pc: " << pc
         << endl;
 
-    assert(entry_map.size() <= assoc);
+    assert(repl_type == TRIAGE_REPL_PERFECT || entry_map.size() <= assoc);
 }
 
 vector<uint64_t> TriageOnchip::get_next_addr(uint64_t prev_addr,
