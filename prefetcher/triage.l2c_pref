@@ -39,7 +39,7 @@ void CACHE::l2c_prefetcher_initialize()
     conf[cpu].use_reeses = true;
     conf[cpu].use_layer_prediction = false;
     conf[cpu].reeses_footprint = false;
-    conf[cpu].reeses_perfect_trigger = true;
+    conf[cpu].reeses_perfect_trigger = false;
     int assoc_config = ASSOC_CONFIG;
     int assoc = (assoc_config>>cpu) & 1;
     if (!assoc)

@@ -41,17 +41,33 @@ void TriageReeses::train(uint64_t cur_pc, uint64_t addr, bool cache_hit)
             //temporal_counts[cur_pc] += 1;
         }
         debug_cout << "Update Temporal: " << trigger << " To " << addr << " @PC "
-            << cur_pc << endl;
+            << cur_pc << " for " << *result << endl;
         ++temporal_update;
         on_chip_data.update(trigger, addr, cur_pc, true, result->clone());
         // link end of spatials to next temporal
-        if ((perfect_trigger || !tu.FOOTPRINT) && result->has_spatial) {
+        if (!tu.FOOTPRINT && result->has_spatial) {
             uint64_t last_addr = result->spatial->last_address();
             TUEntry *link = new TUEntry(addr);
             debug_cout << "Update Spatial: " << last_addr << " To " << addr << " @PC "
-                << cur_pc << endl;
+                << cur_pc << " for " << *result << endl;
             ++spatial_update;
             on_chip_data.update(last_addr, addr, cur_pc, true, link);
+            if (perfect_trigger) {
+                // Pattern can only be Delta pattern at this point
+                DeltaPattern *pattern = static_cast<DeltaPattern*>(result->spatial);
+                int32_t delta = pattern->delta;
+                debug_cout << "LastAddr: " << last_addr << ", Trigger: " << trigger
+                    << ", Delta: " << delta << ", Length: " << pattern->length
+                    << ", LA: " << uint64_t(int64_t(trigger) + int64_t(delta) * int64_t(pattern->length))
+                    << endl;
+                assert(last_addr == uint64_t(int64_t(trigger) + int64_t(delta) * int64_t(pattern->length)));
+
+                for (uint64_t laddr = trigger+delta; laddr < last_addr; laddr+=delta) {
+                    on_chip_data.update(laddr, addr, cur_pc, true, result->clone());
+                    debug_cout << "Update Spatial w/Delta: " << laddr << " To " << addr << " @PC "
+                        << cur_pc << "w/Delta: " << delta << " for " << *result << endl;
+                }
+            }
         }
         delete result;
     } else {

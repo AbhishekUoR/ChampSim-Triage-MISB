@@ -1,7 +1,9 @@
 #ifndef REESES_TRAINING_UNIT_H
 #define REESES_TRAINING_UNIT_H
 
+#include <assert.h>
 #include <map>
+
 
 #include "reeses_spatial.h"
 
@@ -9,6 +11,8 @@
 #define INIT_CONF 3
 
 #define NO_SPATIAL false
+
+//#define PERFECT_TRIGGER
 
 //#define DEBUG
 
@@ -70,6 +74,19 @@ struct TUEntry {
         if (has_spatial)
             spatial = entry.spatial->clone();
     }
+    void print(ostream& os) const {
+        os << temporal;
+        if (has_spatial) {
+            os << "@Spatial" << *spatial;
+        } else {
+            os << "@Temporal";
+        }
+    }
+
+    friend std::ostream& operator << (std::ostream& os, const TUEntry &entry) {
+        entry.print(os);
+        return os;
+    }
 };
 
 /* similar to ISB's training unit
@@ -120,6 +137,7 @@ struct ReesesTrainingUnit {
                 data[cur_pc] = new TUEntry(addr_B);
             }
         } else {
+            assert(data[cur_pc]->spatial == nullptr);
             // no existing spatial pattern
             uint64_t last_addr = data[cur_pc]->temporal;
             if (last_addr == addr_B) {
@@ -152,6 +170,10 @@ struct ReesesTrainingUnit {
                 data[cur_pc] = new TUEntry(addr_B);
             }
         }
+#ifdef PERFECT_TRIGGER
+        if (data.count(cur_pc))
+            result = data[cur_pc]->clone();
+#endif
 
         return result;
     }
