@@ -208,13 +208,13 @@ struct OPTgen
             liveness_history[i] = liveness_history_stable[i];
     }
 
-    uint64_t get_num_opt_accesses()
+    uint64_t get_num_opt_accesses() const
     {
         //assert((num_cache+num_dont_cache) == access);
         return access;
     }
 
-    uint64_t get_num_opt_hits()
+    uint64_t get_num_opt_hits() const
     {
         return num_cache;
 
@@ -222,7 +222,7 @@ struct OPTgen
         return num_opt_misses;
     }
 
-    uint64_t get_traffic()
+    uint64_t get_traffic() const
     {
         return (prefetch - prefetch_cachehit + access - num_cache);
     }

@@ -177,4 +177,8 @@ void TriageBase::predict(uint64_t pc, uint64_t addr, bool cache_hit)
     }
 }
 
+bool TriageBase::should_skip_prefetch(int assoc)
+{
+    return on_chip_data.should_skip_prefetch(assoc);
+}
 

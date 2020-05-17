@@ -52,6 +52,7 @@ class TriageBase {
         virtual void calculatePrefetch(uint64_t pc, uint64_t addr,
                 bool cache_hit, int max_degree, uint64_t cpu);
         virtual uint64_t getNextPrefetchAddr(uint64_t pc, uint64_t addr);
+        bool should_skip_prefetch(int assoc);
 };
 
 class Triage : public TriageBase {

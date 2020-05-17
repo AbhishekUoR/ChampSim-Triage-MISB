@@ -239,6 +239,11 @@ uint32_t TriageOnchip::get_assoc()
     return assoc;
 }
 
+bool TriageOnchip::should_skip_prefetch(int assoc)
+{
+    return repl->should_skip_prefetch(assoc);
+}
+
 void TriageOnchip::print_stats()
 {
     assert(repl != NULL);

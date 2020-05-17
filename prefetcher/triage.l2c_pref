@@ -36,7 +36,7 @@ void CACHE::l2c_prefetcher_initialize()
 //    conf[cpu].repl = TRIAGE_REPL_PERFECT;
     conf[cpu].use_dynamic_assoc = false;
     conf[cpu].use_compressed_tag = false;
-    conf[cpu].use_reeses = true;
+    conf[cpu].use_reeses = false;
     conf[cpu].use_layer_prediction = false;
     conf[cpu].reeses_footprint = false;
     conf[cpu].reeses_perfect_trigger = false;
@@ -54,6 +54,8 @@ void CACHE::l2c_prefetcher_initialize()
     else
         prefetchers[cpu] = new Triage;
     prefetchers[cpu]->set_conf(&conf[cpu]);
+
+    rah.set_prefetchers(prefetchers);
 
     nominal_prefetches = 0, actual_prefetches = 0;
 }

@@ -47,6 +47,11 @@ TriageRepl* TriageRepl::create_repl(
     return repl;
 }
 
+bool TriageRepl::should_skip_prefetch(int assoc)
+{
+    return false;
+}
+
 TriageReplLRU::TriageReplLRU(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list)
     : TriageRepl(entry_list)
 {
@@ -158,6 +163,7 @@ void TriageReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
                     << endl;
                 assert(curr_quanta > last_quanta);
                 opt_hit[l] = sample_optgen[l][set_id].should_cache(curr_quanta, last_quanta, false);
+                last_hit[l] = opt_hit[l];
                 sample_optgen[l][set_id].add_access(curr_quanta);
                 debug_cout << l << " SHOULD CACHE ADDR: " << hex << addr << ", opt_hit: " << dec << opt_hit[l]
                     << ", curr_quanta: " << curr_quanta << ", last_quanta: " << last_quanta
@@ -186,6 +192,7 @@ void TriageReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
             //optgen[set_id].add_access(curr_quanta, 0); //TODO: CPU
             for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
                 sample_optgen[l][set_id].add_access(curr_quanta);
+                last_hit[l] = false;
             }
         }
 
@@ -308,6 +315,32 @@ uint32_t TriageReplHawkeye::get_assoc()
             // This can't happen
             assert(0);
     }
+}
+
+bool TriageReplHawkeye::should_skip_prefetch(int assoc)
+{
+    int config = 0;
+    switch (assoc) {
+        case 8:
+            config = 1;
+            break;
+        case 4:
+            config = 0;
+            break;
+        case 0:
+            config = 2;
+            break;
+        default:
+            cout << "We only support assoc 0,4,8 for now." << endl;
+            assert(0);
+    }
+    if (config == 2) {
+        // No assoc, skip all prefetches
+        return true;
+    }
+    return last_hit[config];
+    
+    return false;
 }
 
 void TriageReplHawkeye::print_stats()

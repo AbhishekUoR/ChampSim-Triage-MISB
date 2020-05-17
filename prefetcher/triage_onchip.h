@@ -53,6 +53,7 @@ class TriageRepl {
         virtual uint64_t pickVictim(uint64_t set_id) = 0;
         virtual void print_stats() {}
         virtual uint32_t get_assoc() { return 8; }
+        virtual bool should_skip_prefetch(int assoc);
 
         static TriageRepl* create_repl(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list,
                 TriageReplType type, uint64_t assoc, bool use_dynamic_assoc);
@@ -86,6 +87,8 @@ class TriageReplHawkeye : public TriageRepl
     uint64_t last_access_count, curr_access_count;
     bool use_dynamic;
 
+    bool last_hit[HAWKEYE_SAMPLE_ASSOC_COUNT];
+
     void choose_optgen();
 
     public:
@@ -93,6 +96,7 @@ class TriageReplHawkeye : public TriageRepl
         void addEntry(uint64_t set_id, uint64_t addr, uint64_t pc);
         uint64_t pickVictim(uint64_t set_id);
         uint32_t get_assoc();
+        bool should_skip_prefetch(int assoc);
 
         void print_stats();
 };
@@ -134,6 +138,8 @@ class TriageOnchip {
 
         void print_stats();
         uint32_t get_assoc();
+
+        bool should_skip_prefetch(int assoc);
 };
 
 #endif // __TRIAGE_ONCHIP_H__

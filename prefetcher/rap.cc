@@ -17,7 +17,8 @@ RAH::RAH(uint64_t num_sets) :
     index_mask(num_sets-1),
     data_size(RAH_CONFIG_COUNT),
     metadata_size(RAH_CONFIG_COUNT),
-    optgen_mytimer(num_sets),
+    optgen_mytimer(RAH_CONFIG_COUNT, vector<uint64_t>( num_sets)),
+    optgen_addr_history(RAH_CONFIG_COUNT),
     optgens(NUM_CPUS, vector<vector<OPTgen>>(num_sets, vector<OPTgen>(RAH_CONFIG_COUNT))),
     trigger(0)
 {
@@ -30,7 +31,12 @@ RAH::RAH(uint64_t num_sets) :
     }
 }
 
-uint64_t RAH::get_traffic(int core, int config)
+void RAH::set_prefetchers(TriageBase** prefetcher_array)
+{
+    prefetchers.assign(prefetcher_array, prefetcher_array+NUM_CPUS);
+}
+
+uint64_t RAH::get_traffic(int core, int config) const
 {
     uint64_t val = 0;
     for (int i = 0; i < num_sets; ++i) {
@@ -40,7 +46,7 @@ uint64_t RAH::get_traffic(int core, int config)
     return val;
 }
 
-uint64_t RAH::get_accesses(int core, int config)
+uint64_t RAH::get_accesses(int core, int config) const
 {
     uint64_t val = 0;
     for (int i = 0; i < num_sets; ++i) {
@@ -50,7 +56,7 @@ uint64_t RAH::get_accesses(int core, int config)
     return val;
 }
 
-uint64_t RAH::get_hits(int core, int config)
+uint64_t RAH::get_hits(int core, int config) const
 {
     uint64_t val = 0;
     for (int i = 0; i < num_sets; ++i) {
@@ -72,15 +78,15 @@ void RAH::add_access(uint64_t addr, uint64_t pc, int core, bool is_prefetch)
         << endl;
     if(SAMPLED_SET(set_id))
     {
-        uint64_t curr_quanta = optgen_mytimer[set_id];
-        vector<bool> opt_hit(RAH_CONFIG_COUNT, false);
-        signatures[addr] = pc;
-        if(optgen_addr_history.find(addr) != optgen_addr_history.end())
-        {
-            uint64_t last_quanta = optgen_addr_history[addr].last_quanta;
-            assert(curr_quanta >= last_quanta);
-            uint64_t last_pc = optgen_addr_history[addr].PC;
-            for (unsigned l = 0; l < RAH_CONFIG_COUNT; ++l) {
+        for (unsigned l = 0; l < RAH_CONFIG_COUNT; ++l) {
+            if (is_prefetch && prefetchers[core]->should_skip_prefetch(rah_pref_assoc[l]))
+                continue;
+            uint64_t curr_quanta = optgen_mytimer[l][set_id];
+            vector<bool> opt_hit(RAH_CONFIG_COUNT, false);
+            if(optgen_addr_history[l].find(addr) != optgen_addr_history[l].end())
+            {
+                uint64_t last_quanta = optgen_addr_history[l][addr].last_quanta;
+                uint64_t last_pc = optgen_addr_history[l][addr].PC;
                 assert(curr_quanta > last_quanta);
                 opt_hit[l] = optgens[core][set_id][l].should_cache(curr_quanta, last_quanta, is_prefetch);
                 if (is_prefetch)
@@ -91,23 +97,21 @@ void RAH::add_access(uint64_t addr, uint64_t pc, int core, bool is_prefetch)
                     << ", curr_quanta: " << curr_quanta << ", last_quanta: " << last_quanta
                     << endl;
             }
-        }
-        // This is the first time we are seeing this line
-        else
-        {
-            //Initialize a new entry in the sampler
-            optgen_addr_history[addr].init(curr_quanta);
-            for (unsigned l = 0; l < RAH_CONFIG_COUNT; ++l) {
+            // This is the first time we are seeing this line
+            else
+            {
+                //Initialize a new entry in the sampler
+                optgen_addr_history[l][addr].init(curr_quanta);
                 if (is_prefetch)
                     optgens[core][set_id][l].add_prefetch(curr_quanta);
                 else
                     optgens[core][set_id][l].add_access(curr_quanta);
                 //opt_hit[l] = optgens[core][set_id][l].should_cache(curr_quanta, 0, is_prefetch);
             }
-        }
 
-        optgen_addr_history[addr].update(optgen_mytimer[set_id], pc, false);
-        optgen_mytimer[set_id]++;
+            optgen_addr_history[l][addr].update(optgen_mytimer[l][set_id], pc, false);
+            optgen_mytimer[l][set_id]++;
+        }
     }
 }
 
