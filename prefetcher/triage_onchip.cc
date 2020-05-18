@@ -1,6 +1,7 @@
 
 #include <assert.h>
 
+#include "rap.h"
 #include "triage_onchip.h"
 #include "triage.h"
 
@@ -44,8 +45,9 @@ TriageOnchip::TriageOnchip()
 {
 }
 
-void TriageOnchip::set_conf(TriageConfig *config)
+void TriageOnchip::set_conf(uint64_t cpu, TriageConfig *config)
 {
+    this->cpu = cpu;
     assoc = config->on_chip_assoc;
     num_sets = config->on_chip_set;
     num_sets = num_sets >> ONCHIP_LINE_SHIFT;
@@ -53,6 +55,9 @@ void TriageOnchip::set_conf(TriageConfig *config)
     repl_type = config->repl;
     index_mask = num_sets - 1;
     use_dynamic_assoc = config->use_dynamic_assoc;
+    use_rap_assoc = config->use_rap_assoc;
+    // Dynamic assoc and Rap assoc cannot be both activated
+    assert(!(use_dynamic_assoc&&use_rap_assoc));
     use_compressed_tag = config->use_compressed_tag;
     use_reeses = config->use_reeses;
 
@@ -126,6 +131,8 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
 {
     if (use_dynamic_assoc) {
         assoc = repl->get_assoc();
+    } else if (use_rap_assoc) {
+        assoc = rap->get_best_assoc(cpu);
     }
     uint64_t set_id = get_set_id(prev_addr);
     assert(set_id < num_sets);

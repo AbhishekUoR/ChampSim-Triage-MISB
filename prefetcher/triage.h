@@ -18,6 +18,7 @@ struct TriageConfig {
     int on_chip_set, on_chip_assoc, log_on_chip_set;
     int training_unit_size;
     bool use_dynamic_assoc;
+    bool use_rap_assoc;
     bool use_compressed_tag;
     bool use_reeses;
     bool use_layer_prediction;
@@ -30,6 +31,7 @@ struct TriageConfig {
 
 class TriageBase {
     protected:
+        uint64_t cpu;
         int lookahead, degree, prefetch_queue_degree;
         bool use_layer_prediction;
         // Stats
@@ -46,7 +48,8 @@ class TriageBase {
         TriageOnchip on_chip_data;
 
         TriageBase();
-        virtual void set_conf(TriageConfig *config);
+        virtual void set_conf(uint64_t cpu, TriageConfig *config);
+        void set_rap(RAH* rap) {on_chip_data.set_rap(rap);}
         virtual void print_stats();
         uint32_t get_assoc();
         virtual void calculatePrefetch(uint64_t pc, uint64_t addr,
@@ -62,7 +65,7 @@ class Triage : public TriageBase {
         virtual void train(uint64_t pc, uint64_t addr, bool hit) override;
     public:
         Triage();
-        virtual void set_conf(TriageConfig *config) override;
+        virtual void set_conf(uint64_t cpu, TriageConfig *config) override;
 };
 
 #endif // __TRIAGE_H__

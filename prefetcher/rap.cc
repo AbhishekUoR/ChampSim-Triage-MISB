@@ -115,6 +115,22 @@ void RAH::add_access(uint64_t addr, uint64_t pc, int core, bool is_prefetch)
     }
 }
 
+int RAH::get_best_assoc(int core)
+{
+    int best_config = 0, best_hit_count = 0;
+    for (int config = 0; config < RAH_CONFIG_COUNT; ++config) {
+        uint64_t hit_count = get_hits(core, config);
+        if (hit_count > best_hit_count) {
+            best_config = config;
+            best_hit_count = hit_count;
+        }
+    }
+    // XXX: Only works for rah_pref_assoc => 8,8,8,8,4,0
+    assert(best_config >= 3);
+
+    return rah_pref_assoc[best_config];
+}
+
 void RAH::print_stats()
 {
     cout << "RAH Triggers: " << trigger << endl;

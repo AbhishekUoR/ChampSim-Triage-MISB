@@ -29,16 +29,17 @@ TriageBase::TriageBase()
     total_assoc = 0;
 }
 
-void TriageBase::set_conf(TriageConfig *config)
+void TriageBase::set_conf(uint64_t cpu, TriageConfig *config)
 {
     assert(config != NULL);
+    this->cpu = cpu;
     lookahead = config->lookahead;
     degree = config->degree;
     prefetch_queue_degree = config->prefetch_queue_degree;
     use_layer_prediction = config->use_layer_prediction;
     assert(prefetch_queue_degree <= degree);
 
-    on_chip_data.set_conf(config);
+    on_chip_data.set_conf(cpu, config);
 }
 
 uint32_t TriageBase::get_assoc()
@@ -108,9 +109,9 @@ Triage::Triage()
 {
 }
 
-void Triage::set_conf(TriageConfig *config)
+void Triage::set_conf(uint64_t cpu, TriageConfig *config)
 {
-    TriageBase::set_conf(config);
+    TriageBase::set_conf(cpu, config);
     training_unit.set_conf(config);
 }
 

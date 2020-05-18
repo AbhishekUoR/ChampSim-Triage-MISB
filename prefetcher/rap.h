@@ -41,6 +41,7 @@ class RAH
         uint64_t get_hits(int core, int config) const;
         uint64_t get_accesses(int core, int config) const;
         void add_access(uint64_t addr, uint64_t pc, int core, bool is_prefetch);
+        int get_best_assoc(int core);
         void print_stats();
 };
 

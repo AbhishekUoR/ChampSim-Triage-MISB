@@ -18,6 +18,7 @@
 #define INVALID_ADDR 0xdeadbeef
 
 struct TriageConfig;
+class RAH;
 
 enum TriageReplType {
     TRIAGE_REPL_LRU,
@@ -113,12 +114,13 @@ class TriageReplPerfect : public TriageRepl
 // bytes
 
 class TriageOnchip {
+    uint64_t cpu;
     uint32_t num_sets, assoc, log_num_sets;
     uint64_t index_mask;
     std::vector<std::map<uint64_t, TriageOnchipEntry> > entry_list;
     TriageReplType repl_type;
     TriageRepl *repl;
-    bool use_dynamic_assoc;
+    bool use_dynamic_assoc, use_rap_assoc;
     bool use_compressed_tag;
     bool use_reeses;
 
@@ -126,10 +128,12 @@ class TriageOnchip {
     uint64_t get_line_offset(uint64_t addr);
 
     uint64_t generate_tag(uint64_t addr);
+    RAH* rap;
 
     public:
         TriageOnchip();
-        void set_conf(TriageConfig *config);
+        void set_conf(uint64_t cpu, TriageConfig *config);
+        void set_rap(RAH* rap) {this->rap = rap;}
 
         void update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl, TUEntry* reeses_entry);
         vector<uint64_t> get_next_addr(uint64_t prev_addr, uint64_t pc, bool update_stats);

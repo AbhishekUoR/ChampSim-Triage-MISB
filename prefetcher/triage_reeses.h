@@ -13,7 +13,7 @@ class TriageReeses : public TriageBase {
         ReesesTrainingUnit tu;
     public:
         TriageReeses();
-        void set_conf(TriageConfig *config) override;
+        void set_conf(uint64_t cpu, TriageConfig *config) override;
         void train(uint64_t pc, uint64_t addr, bool cache_hit) override;
         void predict(uint64_t pc, uint64_t addr, bool cache_hit) override;
         void print_stats() override;

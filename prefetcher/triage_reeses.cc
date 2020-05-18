@@ -14,9 +14,9 @@ TriageReeses::TriageReeses()
 {
 }
 
-void TriageReeses::set_conf(TriageConfig *config)
+void TriageReeses::set_conf(uint64_t cpu, TriageConfig *config)
 {
-    TriageBase::set_conf(config);
+    TriageBase::set_conf(cpu, config);
     tu.FOOTPRINT = config->reeses_footprint;
     perfect_trigger = config->reeses_perfect_trigger;
 }
