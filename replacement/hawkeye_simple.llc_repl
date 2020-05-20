@@ -88,14 +88,14 @@ void CACHE::llc_initialize_replacement()
 uint32_t CACHE::llc_find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
 {
     // look for the maxRRPV line
-    for (uint32_t i=0; i<LLC_WAYS; i++)
+    for (uint32_t i=0; i<current_assoc; i++)
         if (rrpv[set][i] == maxRRPV)
             return i;
 
     //If we cannot find a cache-averse line, we evict the oldest cache-friendly line
     uint32_t max_rrip = 0;
     int32_t lru_victim = -1;
-    for (uint32_t i=0; i<LLC_WAYS; i++)
+    for (uint32_t i=0; i<current_assoc; i++)
     {
         if (rrpv[set][i] >= max_rrip)
         {
@@ -215,12 +215,12 @@ void CACHE::llc_update_replacement_state(uint32_t cpu, uint32_t set, uint32_t wa
         if(!hit)
         {
             bool saturated = false;
-            for(uint32_t i=0; i<LLC_WAYS; i++)
+            for(uint32_t i=0; i<current_assoc; i++)
                 if (rrpv[set][i] == maxRRPV-1)
                     saturated = true;
 
             //Age all the cache-friendly  lines
-            for(uint32_t i=0; i<LLC_WAYS; i++)
+            for(uint32_t i=0; i<current_assoc; i++)
             {
                 if (!saturated && rrpv[set][i] < maxRRPV-1)
                     rrpv[set][i]++;

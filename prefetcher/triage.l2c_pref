@@ -20,8 +20,7 @@ uint64_t last_address[NUM_CPUS];
 std::set<uint64_t>unique_addr;
 std::map<uint64_t, uint64_t> total_usage_count;
 std::map<uint64_t, uint64_t> actual_usage_count;
-
-uint64_t nominal_prefetches, actual_prefetches;
+uint64_t nominal_prefetches, actual_prefetches, metadata_assoc;
 
 //16K entries = 64KB
 void CACHE::l2c_prefetcher_initialize()
@@ -35,7 +34,7 @@ void CACHE::l2c_prefetcher_initialize()
     conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
 //    conf[cpu].repl = TRIAGE_REPL_PERFECT;
     conf[cpu].use_dynamic_assoc = false;
-    conf[cpu].use_rap_assoc = false;
+    conf[cpu].use_rap_assoc = true;
     conf[cpu].use_compressed_tag = false;
     conf[cpu].use_reeses = false;
     conf[cpu].use_layer_prediction = false;
@@ -59,7 +58,7 @@ void CACHE::l2c_prefetcher_initialize()
     rah.set_prefetchers(prefetchers);
     prefetchers[cpu]->set_rap(&rah);
 
-    nominal_prefetches = 0, actual_prefetches = 0;
+    nominal_prefetches = 0, actual_prefetches = 0, metadata_assoc = 0;
 }
 
 uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
@@ -113,7 +112,6 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
         int ret = prefetch_line(pc, addr, pref_addr, TRIAGE_FILL_LEVEL, md_in);
         if(ret)
         {
- //           cout << hex << addr << " " << pref_addr << dec << endl;
             ++actual_prefetches;
             if(++prefetched >= conf[cpu].degree)
                 break;
@@ -121,12 +119,13 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
     }
 
     // Set cache assoc if dynamic
-    //cout << "LLC WAY: " << LLC_WAY << ", ASSOC: " << prefetchers[cpu]->get_assoc() << endl;
     unsigned total_assoc = 0;
     for (unsigned mycpu = 0; mycpu < NUM_CPUS; ++mycpu) {
         total_assoc += prefetchers[mycpu]->get_assoc();
     }
     total_assoc /= NUM_CPUS;
+    if (pc != 0)
+        metadata_assoc += total_assoc;
     assert(total_assoc < LLC_WAY);
     if (conf[cpu].repl != TRIAGE_REPL_PERFECT)
         static_cast<CACHE*>(lower_level)->current_assoc = LLC_WAY - total_assoc;
@@ -148,7 +147,6 @@ uint64_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t 
 
 void CACHE::l2c_prefetcher_final_stats()
 {
- //   cpu = 0;
     cout << "CPU " << cpu << " TRIAGE Stats:" << endl;
 
     prefetchers[cpu]->print_stats();
@@ -167,6 +165,9 @@ void CACHE::l2c_prefetcher_final_stats()
 //    for (unsigned i = 0; i < 100000; ++i) {
 //        cout << i << ' ' <<  total_pref_count[i] << ' ' << actual_pref_count[i] << endl;
 //    }
+    cout << "NominalPrefetches: " << nominal_prefetches << endl;
+    cout << "ActualPrefetches: " << actual_prefetches << endl;
+    cout << "MetadataAssoc: " << metadata_assoc << endl;
 
     cout << "RAH Estimation Result: " << endl;
     for (int core = 0; core < NUM_CPUS; ++core) {

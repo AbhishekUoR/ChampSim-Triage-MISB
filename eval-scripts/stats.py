@@ -93,6 +93,10 @@ class Stat:
                 if res != None:
                     stat['optgen_traffic'] = int(res.group(1))
 
+                res = re.match('MetadataAssoc: (\d+)', line)
+                if res != None:
+                    stat['triage_metadata_assoc'] = float(res.group(1))
+
                 res = re.match('RAH Core 0 Config (\d+) (\w+): (\d+)', line)
                 if res != None:
                     stat['rah_config_{0}_{1}'.format(res.group(1), res.group(2))] = int(res.group(3))

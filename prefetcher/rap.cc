@@ -40,7 +40,7 @@ uint64_t RAH::get_traffic(int core, int config) const
 {
     uint64_t val = 0;
     for (int i = 0; i < num_sets; ++i) {
-        debug_cout << "Traffic set " << i << " : " << optgens[core][i][config].get_traffic() << endl;
+//        debug_cout << "Traffic set " << i << " : " << optgens[core][i][config].get_traffic() << endl;
         val += optgens[core][i][config].get_traffic();
     }
     return val;
@@ -50,7 +50,7 @@ uint64_t RAH::get_accesses(int core, int config) const
 {
     uint64_t val = 0;
     for (int i = 0; i < num_sets; ++i) {
-        debug_cout << "Accesses set " << i << " : " << optgens[core][i][config].get_num_opt_accesses() << endl;
+//        debug_cout << "Accesses set " << i << " : " << optgens[core][i][config].get_num_opt_accesses() << endl;
         val += optgens[core][i][config].get_num_opt_accesses();
     }
     return val;
@@ -60,7 +60,7 @@ uint64_t RAH::get_hits(int core, int config) const
 {
     uint64_t val = 0;
     for (int i = 0; i < num_sets; ++i) {
-        debug_cout << "Hits set " << i << " : " << optgens[core][i][config].get_num_opt_hits() << endl;
+//        debug_cout << "Hits set " << i << " : " << optgens[core][i][config].get_num_opt_hits() << endl;
         val += optgens[core][i][config].get_num_opt_hits();
     }
     return val;
@@ -117,18 +117,25 @@ void RAH::add_access(uint64_t addr, uint64_t pc, int core, bool is_prefetch)
 
 int RAH::get_best_assoc(int core)
 {
-    int best_config = 0, best_hit_count = 0;
-    for (int config = 0; config < RAH_CONFIG_COUNT; ++config) {
+    int best_config = 3, best_hit_count = 0;
+    for (int config = 3; config < RAH_CONFIG_COUNT; ++config) {
         uint64_t hit_count = get_hits(core, config);
+        debug_cout << "CORE " << core << " CONFIG " << config
+            << " HIT_COUNT " << hit_count << endl;
         if (hit_count > best_hit_count) {
             best_config = config;
             best_hit_count = hit_count;
         }
     }
     // XXX: Only works for rah_pref_assoc => 8,8,8,8,4,0
+    debug_cout << "Choose Best Config: " << best_config << endl;
+    debug_cout << "RC " << best_config << " HIT_RATE: " << double(get_hits(core,3))/get_accesses(core,3) << ' ' 
+            <<  double(get_hits(core,4))/get_accesses(core,4) << ' '
+            <<  double(get_hits(core,5))/get_accesses(core,5) << ' ' << endl;
     assert(best_config >= 3);
 
-    return rah_pref_assoc[best_config];
+    return 3;
+//    return rah_pref_assoc[best_config];
 }
 
 void RAH::print_stats()
