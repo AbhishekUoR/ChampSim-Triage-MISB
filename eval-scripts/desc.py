@@ -16,6 +16,7 @@ class Descriptor:
         self.champsim_dir = self.json_object['champsim_dir']
         self.trace_dir = self.json_object['trace_dir']
         self.weights_file = self.json_object['weights_file']
+        self.multicore = self.json_object.get('multicore', False)
         self.simulation_insns = self.json_object['simulation_insns']
         self.experiments = [Experiment(exp) for exp in
                 self.json_object['experiments']]

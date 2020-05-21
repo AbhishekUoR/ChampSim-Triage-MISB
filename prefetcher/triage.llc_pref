@@ -26,12 +26,12 @@ void CACHE::llc_prefetcher_initialize()
         conf[c].lookahead = 1;
         conf[c].degree = 1;
         conf[cpu].prefetch_queue_degree = conf[cpu].degree;
-        conf[c].on_chip_assoc = 8;
+        conf[c].on_chip_assoc = 16;
         conf[c].training_unit_size = 10000000;
         conf[c].repl = TRIAGE_REPL_HAWKEYE;
     //    conf[c].repl = TRIAGE_REPL_PERFECT;
         conf[c].use_dynamic_assoc = false;
-        conf[c].use_rap_assoc = true;
+        conf[c].use_rap_assoc = false;
         conf[c].use_compressed_tag = false;
         conf[c].use_reeses = false;
         conf[c].use_layer_prediction = false;
@@ -118,9 +118,9 @@ uint64_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
 //    total_assoc = data[cpu].get_assoc();
     if (pc != 0)
         metadata_assoc += total_assoc;
-    assert(total_assoc < LLC_WAY);
-    if (conf[cpu].repl != TRIAGE_REPL_PERFECT)
-        current_assoc = LLC_WAY - total_assoc;
+//    assert(total_assoc < LLC_WAY);
+//    if (conf[cpu].repl != TRIAGE_REPL_PERFECT)
+//        current_assoc = LLC_WAY - total_assoc;
 
     //cout << total_assoc << " " << current_assoc << endl;
     return metadata_in;
