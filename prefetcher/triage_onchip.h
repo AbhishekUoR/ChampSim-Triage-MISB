@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <map>
-#include <set>
+#include <unordered_set>
 #include <stdint.h>
 #include "optgen_simple.h"
 #include "isb_hawkeye_predictor.h"
@@ -115,20 +115,25 @@ class TriageReplPerfect : public TriageRepl
 
 class TriageOnchip {
     uint64_t cpu;
-    uint32_t num_sets, assoc, log_num_sets;
+    uint32_t num_sets, assoc, max_assoc, log_num_sets;
     uint64_t index_mask;
     std::vector<std::map<uint64_t, TriageOnchipEntry> > entry_list;
     TriageReplType repl_type;
     TriageRepl *repl;
-    bool use_dynamic_assoc, use_rap_assoc;
+    bool use_dynamic_assoc, use_rap_assoc, use_sba_assoc;
     bool use_compressed_tag;
     bool use_reeses;
 
     uint64_t get_set_id(uint64_t addr);
     uint64_t get_line_offset(uint64_t addr);
 
+    unsigned metadata_hit, metadata_compulsory_miss, metadata_capacity_miss;
+
     uint64_t generate_tag(uint64_t addr);
+    void calculate_assoc();
     RAH* rap;
+
+    std::unordered_set<uint64_t> unique_triggers;
 
     public:
         TriageOnchip();

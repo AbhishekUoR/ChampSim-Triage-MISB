@@ -6,7 +6,7 @@
 
 using namespace std;
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define debug_cout cerr << "[TRIAGE] "

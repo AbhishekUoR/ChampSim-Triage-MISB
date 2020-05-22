@@ -35,6 +35,7 @@ void CACHE::l2c_prefetcher_initialize()
 //    conf[cpu].repl = TRIAGE_REPL_PERFECT;
     conf[cpu].use_dynamic_assoc = false;
     conf[cpu].use_rap_assoc = true;
+    conf[cpu].use_sba_assoc = true;
     conf[cpu].use_compressed_tag = false;
     conf[cpu].use_reeses = false;
     conf[cpu].use_layer_prediction = false;

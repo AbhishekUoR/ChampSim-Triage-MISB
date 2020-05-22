@@ -19,6 +19,7 @@ struct TriageConfig {
     int training_unit_size;
     bool use_dynamic_assoc;
     bool use_rap_assoc;
+    bool use_sba_assoc;
     bool use_compressed_tag;
     bool use_reeses;
     bool use_layer_prediction;

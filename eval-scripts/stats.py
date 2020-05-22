@@ -57,6 +57,10 @@ class Stat:
                 if res != None:
                     stat['triage_onchip_entry_size'] = int(res.group(1))
 
+                res = re.match('UniqueTriggerSize=(\d+)', line)
+                if res != None:
+                    stat['triage_unique_trigger_size'] = int(res.group(1))
+
                 res = re.match('SAMPLEOPTGEN 1 accesses: (\d+), hits: (\d+), traffic: (\d+), hit rate: (\d+(\.\d+))', line)
                 if res != None:
                     stat['sample_optgen_hit_rate'] = float(res.group(4))
@@ -96,6 +100,18 @@ class Stat:
                 res = re.match('MetadataAssoc: (\d+)', line)
                 if res != None:
                     stat['triage_metadata_assoc'] = float(res.group(1))
+
+                res = re.match('MetadataHits= (\d+)', line)
+                if res != None:
+                    stat['triage_metadata_hits'] = float(res.group(1))
+
+                res = re.match('MetadataCompulsoryMiss= (\d+)', line)
+                if res != None:
+                    stat['triage_metadata_compulsory_miss'] = float(res.group(1))
+
+                res = re.match('MetadataCapacityMiss== (\d+)', line)
+                if res != None:
+                    stat['triage_metadata_capacity_miss'] = float(res.group(1))
 
                 res = re.match('RAH Core 0 Config (\d+) (\w+): (\d+)', line)
                 if res != None:
@@ -192,6 +208,8 @@ class Stat:
             None
         if 'triage_onchip_entry_size' not in stat:
             stat['triage_onchip_entry_size'] = 0
+        if 'triage_unique_trigger_size' not in stat:
+            stat['triage_unique_trigger_size'] = 0
         if 'triage_spatial_update' not in stat:
             stat['triage_spatial_update'] = 0
         if 'triage_temporal_update' not in stat:

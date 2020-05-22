@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <algorithm>
 
 #include "rap.h"
 #include "triage_onchip.h"
@@ -43,12 +44,15 @@ void TriageOnchipEntry::decrease_confidence(unsigned offset)
 
 TriageOnchip::TriageOnchip()
 {
+    metadata_hit = 0;
+    metadata_compulsory_miss = 0;
+    metadata_capacity_miss = 0;
 }
 
 void TriageOnchip::set_conf(uint64_t cpu, TriageConfig *config)
 {
     this->cpu = cpu;
-    assoc = config->on_chip_assoc;
+    max_assoc = assoc = config->on_chip_assoc;
     num_sets = config->on_chip_set;
     num_sets = num_sets >> ONCHIP_LINE_SHIFT;
     log_num_sets = config->log_on_chip_set;
@@ -56,6 +60,7 @@ void TriageOnchip::set_conf(uint64_t cpu, TriageConfig *config)
     index_mask = num_sets - 1;
     use_dynamic_assoc = config->use_dynamic_assoc;
     use_rap_assoc = config->use_rap_assoc;
+    use_sba_assoc = config->use_sba_assoc;
     // Dynamic assoc and Rap assoc cannot be both activated
     assert(!(use_dynamic_assoc&&use_rap_assoc));
     use_compressed_tag = config->use_compressed_tag;
@@ -127,20 +132,33 @@ int TriageOnchip::decrease_confidence(uint64_t addr)
     return it->second.confidence[line_offset];
 }
 
-void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl, TUEntry* reeses_entry)
+void TriageOnchip::calculate_assoc()
 {
     if (use_dynamic_assoc) {
         assoc = repl->get_assoc();
     } else if (use_rap_assoc) {
         assoc = rap->get_best_assoc(cpu);
+    } else if (use_sba_assoc) {
+        uint32_t unique_trigger_count = unique_triggers.size();
+//        if (unique_trigger_count > assoc*num_sets)
+        assoc = min(unique_trigger_count/num_sets+1, max_assoc);
     }
+}
+
+void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl, TUEntry* reeses_entry)
+{
+    calculate_assoc();
     uint64_t set_id = get_set_id(prev_addr);
     assert(set_id < num_sets);
     uint64_t line_offset = get_line_offset(prev_addr);
     uint64_t tag = generate_tag(prev_addr);
     map<uint64_t, TriageOnchipEntry>& entry_map = entry_list[set_id];
     map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.find(tag);
-    debug_cout << hex << "update prev_addr: " << prev_addr
+
+    if (it!=entry_map.end()) {
+        assert(unique_triggers.count(prev_addr));
+        ++metadata_hit;
+    debug_cout << hex << "HIT update prev_addr: " << prev_addr
         << ", next_addr: " << next_addr
         << ", set_id: " << set_id
         << ", tag: " << tag
@@ -148,7 +166,30 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
         << ", entry map size: " << entry_map.size()
         << ", pc: " << pc
         << endl;
-
+    } else {
+        if (unique_triggers.count(prev_addr)) {
+            ++metadata_capacity_miss;
+    debug_cout << hex << "CAPACITYMISS update prev_addr: " << prev_addr
+        << ", next_addr: " << next_addr
+        << ", set_id: " << set_id
+        << ", tag: " << tag
+        << ", assoc: " << assoc
+        << ", entry map size: " << entry_map.size()
+        << ", pc: " << pc
+        << endl;
+        } else {
+    debug_cout << hex << "COMPULSORYMISS update prev_addr: " << prev_addr
+        << ", next_addr: " << next_addr
+        << ", set_id: " << set_id
+        << ", tag: " << tag
+        << ", assoc: " << assoc
+        << ", entry map size: " << entry_map.size()
+        << ", pc: " << pc
+        << endl;
+            ++metadata_compulsory_miss;
+        }
+    }
+    unique_triggers.insert(prev_addr);
     if (it != entry_map.end()) {
         while (repl_type != TRIAGE_REPL_PERFECT && entry_map.size() > assoc && entry_map.size() > 0) {
             uint64_t victim_addr = repl->pickVictim(set_id);
@@ -201,9 +242,6 @@ vector<uint64_t> TriageOnchip::get_next_addr(uint64_t prev_addr,
         uint64_t pc, bool update_stats)
 {
     vector<uint64_t> result;
-    if (use_dynamic_assoc) {
-        assoc = repl->get_assoc();
-    }
     uint64_t set_id = get_set_id(prev_addr);
     assert(set_id < num_sets);
     uint64_t line_offset = get_line_offset(prev_addr);
@@ -259,6 +297,10 @@ void TriageOnchip::print_stats()
         entry_size += m.size();
     }
     cout << "OnChipEntrySize=" << entry_size << endl;
+    cout << "UniqueTriggerSizze=" << unique_triggers.size() << endl;
+    cout << "MetadataHits=" << metadata_hit << endl;
+    cout << "MetadataCompulsoryMiss=" << metadata_compulsory_miss << endl;
+    cout << "MetadataCapacityMiss==" << metadata_capacity_miss << endl;
     repl->print_stats();
 }
 

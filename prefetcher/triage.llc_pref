@@ -30,8 +30,9 @@ void CACHE::llc_prefetcher_initialize()
         conf[c].training_unit_size = 10000000;
         conf[c].repl = TRIAGE_REPL_HAWKEYE;
     //    conf[c].repl = TRIAGE_REPL_PERFECT;
-        conf[c].use_dynamic_assoc = true;
+        conf[c].use_dynamic_assoc = false;
         conf[c].use_rap_assoc = false;
+        conf[c].use_sba_assoc = true;
         conf[c].use_compressed_tag = false;
         conf[c].use_reeses = true;
         conf[c].use_layer_prediction = false;
