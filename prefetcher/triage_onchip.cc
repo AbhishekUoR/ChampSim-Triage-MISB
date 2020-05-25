@@ -1,6 +1,7 @@
 
 #include <assert.h>
 #include <algorithm>
+#include <functional>
 
 #include "rap.h"
 #include "triage_onchip.h"
@@ -80,7 +81,15 @@ uint64_t TriageOnchip::get_line_offset(uint64_t addr)
 
 uint64_t TriageOnchip::get_set_id(uint64_t addr)
 {
-    uint64_t set_id = (addr>>ONCHIP_LINE_SHIFT) & index_mask;
+    uint64_t set_id;
+#if 0
+    if (use_reeses) {
+        set_id = (addr>>LOG2_REGION_SIZE>>ONCHIP_LINE_SHIFT) & index_mask;
+    } else {
+        set_id = (addr>>ONCHIP_LINE_SHIFT) & index_mask;
+    }
+#endif
+    set_id = hash<uint64_t>{}(addr>>ONCHIP_LINE_SHIFT) % uint64_t(num_sets);
     debug_cout << "num_sets: " << num_sets << ", index_mask: " << index_mask
         << ", set_id: " << set_id <<endl;
     assert(set_id < num_sets);
@@ -97,9 +106,9 @@ uint64_t TriageOnchip::generate_tag(uint64_t addr)
             compressed_tag = compressed_tag ^ (tag & mask);
             tag = tag >> ONCHIP_TAG_BITS;
         }
-        assert(compressed_tag <= mask);
         debug_cout << "GENERATETAG: addr " << addr << ", mask: " << mask
             << ", tag: " << (addr>>6>>ONCHIP_LINE_SHIFT) << ", compressed_tag: " << compressed_tag <<endl;
+        assert(compressed_tag <= mask);
         return compressed_tag;
     } else {
         return tag;
@@ -141,7 +150,7 @@ void TriageOnchip::calculate_assoc()
     } else if (use_sba_assoc) {
         uint32_t unique_trigger_count = unique_triggers.size();
 //        if (unique_trigger_count > assoc*num_sets)
-        assoc = min(unique_trigger_count/num_sets+1, max_assoc);
+        assoc = min(unique_trigger_count/num_sets+2, max_assoc);
     }
 }
 

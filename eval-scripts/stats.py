@@ -18,10 +18,6 @@ class Stat:
         # multi-core
         with open(self.path) as stat_file:
             for line in stat_file:
-                res = re.match('ACCURACY: (\d+(\.\d+)?)', line)
-                if res != None:
-                    stat['accuracy'] = float(res.group(1))
-
                 res = re.match( '(\w+) (\w+)\s+ACCESS:\s+(\d+)\s+HIT:\s+(\d+)\s+MISS:\s+(\d+)', line)
                 if res != None:
                     stat[res.group(1)+'_'+res.group(2)+'_access'] = int(res.group(3))
@@ -171,10 +167,13 @@ class Stat:
         stat['coverage'] = 0.0
 #            stat['timeliness'] = 0.0
         try:
-            stat['accuracy'] = float(stat['L2C_prefetch_useful'])/(float(stat['L2C_prefetch_useful'])
-                    + float(stat['L2C_prefetch_useless']))
-            stat['coverage'] = float(stat['L2C_prefetch_useful'])/float(stat['L2C_prefetch_useful']+stat['L2C_LOAD_miss']+stat['L2C_RFO_miss'])
+#            stat['accuracy'] = float(stat['L2C_prefetch_useful'])/(float(stat['L2C_prefetch_useful'])
+#                    + float(stat['L2C_prefetch_useless']))
+#            stat['coverage'] = float(stat['L2C_prefetch_useful'])/float(stat['L2C_prefetch_useful']+stat['L2C_LOAD_miss']+stat['L2C_RFO_miss'])
 #            stat['timeliness'] = float(stat['LLC_prefetch_useful'])/float(stat['LLC_prefetch_late']+stat['LLC_prefetch_useful'])
+            stat['accuracy'] = float(stat['LLC_prefetch_useful'])/(float(stat['LLC_prefetch_useful'])
+                    + float(stat['LLC_prefetch_useless']))
+            stat['coverage'] = float(stat['LLC_prefetch_useful'])/float(stat['LLC_prefetch_useful']+stat['LLC_LOAD_miss'])
         except:
             None
 
