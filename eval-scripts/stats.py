@@ -97,17 +97,17 @@ class Stat:
                 if res != None:
                     stat['triage_metadata_assoc'] = float(res.group(1))
 
-                res = re.match('MetadataHits= (\d+)', line)
+                res = re.match('MetadataHits=(\d+)', line)
                 if res != None:
-                    stat['triage_metadata_hits'] = float(res.group(1))
+                    stat['triage_metadata_hits'] = int(res.group(1))
 
-                res = re.match('MetadataCompulsoryMiss= (\d+)', line)
+                res = re.match('MetadataCompulsoryMiss=(\d+)', line)
                 if res != None:
-                    stat['triage_metadata_compulsory_miss'] = float(res.group(1))
+                    stat['triage_metadata_compulsory_miss'] = int(res.group(1))
 
-                res = re.match('MetadataCapacityMiss== (\d+)', line)
+                res = re.match('MetadataCapacityMiss==(\d+)', line)
                 if res != None:
-                    stat['triage_metadata_capacity_miss'] = float(res.group(1))
+                    stat['triage_metadata_capacity_miss'] = int(res.group(1))
 
                 res = re.match('RAH Core 0 Config (\d+) (\w+): (\d+)', line)
                 if res != None:
@@ -129,6 +129,14 @@ class Stat:
                 for n in ["Accesses", "Hits", "Traffic"]:
                     stat['rah_config_{0}_{1}'.format(config, n)] = 0
 
+        if "triage_metadata_hits" not in stat:
+            stat['triage_metadata_hits'] = 0
+
+        if "triage_metadata_compulsory_miss" not in stat:
+            stat['triage_metadata_compulsory_miss'] = 0
+
+        if "triage_metadata_capacity_miss" not in stat:
+            stat['triage_metadata_capacity_miss'] = 0
 
         try:
             stat['l1i_apki'] = float(stat['L1I_TOTAL_access'])*1000/float(stat['cpu_0_insns'])

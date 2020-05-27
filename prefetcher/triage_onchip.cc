@@ -9,6 +9,8 @@
 
 using namespace std;
 
+//#define USE_OLD_SETID
+
 //#define DEBUG
 
 #ifdef DEBUG
@@ -82,14 +84,15 @@ uint64_t TriageOnchip::get_line_offset(uint64_t addr)
 uint64_t TriageOnchip::get_set_id(uint64_t addr)
 {
     uint64_t set_id;
-#if 0
+#ifdef USE_OLD_SETID
     if (use_reeses) {
         set_id = (addr>>LOG2_REGION_SIZE>>ONCHIP_LINE_SHIFT) & index_mask;
     } else {
         set_id = (addr>>ONCHIP_LINE_SHIFT) & index_mask;
     }
-#endif
+#else
     set_id = hash<uint64_t>{}(addr>>ONCHIP_LINE_SHIFT) % uint64_t(num_sets);
+#endif
     debug_cout << "num_sets: " << num_sets << ", index_mask: " << index_mask
         << ", set_id: " << set_id <<endl;
     assert(set_id < num_sets);
