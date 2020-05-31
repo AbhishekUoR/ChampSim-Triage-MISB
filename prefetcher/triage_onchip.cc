@@ -170,6 +170,7 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
     if (it!=entry_map.end()) {
         assert(unique_triggers.count(prev_addr));
         ++metadata_hit;
+//        cout << "0 " << current_core_cycle[0] << endl;
     debug_cout << hex << "HIT update prev_addr: " << prev_addr
         << ", next_addr: " << next_addr
         << ", set_id: " << set_id
@@ -181,6 +182,7 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
     } else {
         if (unique_triggers.count(prev_addr)) {
             ++metadata_capacity_miss;
+//            cout << "1 " << current_core_cycle[0] << endl;
     debug_cout << hex << "CAPACITYMISS update prev_addr: " << prev_addr
         << ", next_addr: " << next_addr
         << ", set_id: " << set_id
@@ -190,6 +192,8 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
         << ", pc: " << pc
         << endl;
         } else {
+            ++metadata_compulsory_miss;
+//            cout << "2 " << current_core_cycle[0] << endl;
     debug_cout << hex << "COMPULSORYMISS update prev_addr: " << prev_addr
         << ", next_addr: " << next_addr
         << ", set_id: " << set_id
@@ -198,7 +202,6 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
         << ", entry map size: " << entry_map.size()
         << ", pc: " << pc
         << endl;
-            ++metadata_compulsory_miss;
         }
     }
     unique_triggers.insert(prev_addr);
