@@ -18,6 +18,7 @@
 #define INVALID_ADDR 0xdeadbeef
 
 struct TriageConfig;
+class TriageOnchip;
 class RAH;
 
 enum TriageReplType {
@@ -57,7 +58,7 @@ class TriageRepl {
         virtual bool should_skip_prefetch(int assoc);
 
         static TriageRepl* create_repl(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list,
-                TriageReplType type, uint64_t assoc, bool use_dynamic_assoc);
+                TriageReplType type, uint64_t assoc, bool use_dynamic_assoc, TriageOnchip* onchip);
 };
 
 class TriageReplLRU : public TriageRepl
@@ -75,6 +76,7 @@ class TriageReplLRU : public TriageRepl
 extern unsigned hawkeye_sample_assoc[];
 class TriageReplHawkeye : public TriageRepl
 {
+    TriageOnchip *on_chip_info;
     unsigned max_rrpv;
     std::vector<uint64_t> optgen_mytimer;
 //    std::vector<OPTgen> optgen;
@@ -86,6 +88,7 @@ class TriageReplHawkeye : public TriageRepl
     std::map<uint64_t, uint32_t> hawkeye_pc_ps_total_predictions;
     IsbHawkeyePCPredictor predictor;
     uint64_t last_access_count, curr_access_count;
+    int assoc;
     bool use_dynamic;
 
     bool last_hit[HAWKEYE_SAMPLE_ASSOC_COUNT];
@@ -93,7 +96,7 @@ class TriageReplHawkeye : public TriageRepl
     void choose_optgen();
 
     public:
-        TriageReplHawkeye(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list, uint64_t assoc, bool use_dynamic_assoc);
+        TriageReplHawkeye(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list, uint64_t assoc, bool use_dynamic_assoc, TriageOnchip *onchip);
         void addEntry(uint64_t set_id, uint64_t addr, uint64_t pc);
         uint64_t pickVictim(uint64_t set_id);
         uint32_t get_assoc();

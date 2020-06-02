@@ -26,7 +26,8 @@ TriageRepl::TriageRepl(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entr
 
 TriageRepl* TriageRepl::create_repl(
         std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list,
-        TriageReplType repl_type, uint64_t assoc, bool use_dynamic_assoc)
+        TriageReplType repl_type, uint64_t assoc, bool use_dynamic_assoc,
+        TriageOnchip *onchip)
 {
     TriageRepl *repl;
     switch (repl_type) {
@@ -34,7 +35,7 @@ TriageRepl* TriageRepl::create_repl(
             repl = new TriageReplLRU(entry_list);
             break;
         case TRIAGE_REPL_HAWKEYE:
-            repl = new TriageReplHawkeye(entry_list, assoc, use_dynamic_assoc);
+            repl = new TriageReplHawkeye(entry_list, assoc, use_dynamic_assoc, onchip);
             break;
         case TRIAGE_REPL_PERFECT:
             repl = new TriageReplPerfect(entry_list);
@@ -95,8 +96,8 @@ uint64_t TriageReplLRU::pickVictim(uint64_t set_id)
 }
 
 TriageReplHawkeye::TriageReplHawkeye(std::vector<std::map<uint64_t, TriageOnchipEntry> >* entry_list,
-        uint64_t assoc, bool use_dynamic_assoc)
-    : TriageRepl(entry_list)
+        uint64_t assoc, bool use_dynamic_assoc, TriageOnchip * onchip)
+    : TriageRepl(entry_list), on_chip_info(onchip)
 {
     max_rrpv = 3;
     uint64_t num_sets = entry_list->size();
@@ -110,15 +111,18 @@ TriageReplHawkeye::TriageReplHawkeye(std::vector<std::map<uint64_t, TriageOnchip
 //    }
 
     last_access_count = curr_access_count = 0;
+    this->assoc = assoc;
     if (assoc==4) {
         dynamic_optgen_choice = 0;
     } else if (assoc ==8) {
         dynamic_optgen_choice = 1;
     } else {
-        dynamic_optgen_choice = 1;
+        dynamic_optgen_choice = 0;
     }
     use_dynamic = use_dynamic_assoc;
     sample_optgen.resize(HAWKEYE_SAMPLE_ASSOC_COUNT);
+    if (!use_dynamic)
+        hawkeye_sample_assoc[0] = assoc;
     for (unsigned l = 0; l < HAWKEYE_SAMPLE_ASSOC_COUNT; ++l) {
         sample_optgen[l].resize(num_sets);
         for (size_t i = 0; i < num_sets; ++i) {
@@ -134,6 +138,11 @@ TriageReplHawkeye::TriageReplHawkeye(std::vector<std::map<uint64_t, TriageOnchip
 
 void TriageReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
 {
+    if (!use_dynamic) {
+        for (OPTgen& optgen : sample_optgen[0]) {
+            optgen.CACHE_SIZE = on_chip_info->get_assoc()>2?on_chip_info->get_assoc()-2:1;
+        }
+    }
     debug_cout << hex << "Hawkeye addEntry: set_id: " << set_id << ", addr: " << addr << ", pc: " << pc << endl;
     map<uint64_t, TriageOnchipEntry>& entry_map = (*entry_list)[set_id];
     if (use_dynamic) {
@@ -236,6 +245,11 @@ void TriageReplHawkeye::addEntry(uint64_t set_id, uint64_t addr, uint64_t pc)
 
 uint64_t TriageReplHawkeye::pickVictim(uint64_t set_id)
 {
+    if (!use_dynamic) {
+        for (OPTgen& optgen : sample_optgen[0]) {
+            optgen.CACHE_SIZE = on_chip_info->get_assoc()>2?on_chip_info->get_assoc()-2:1;
+        }
+    }
     map<uint64_t, TriageOnchipEntry>& entry_map = (*entry_list)[set_id];
     debug_cout << "PickVictim before Entry Map size: " << entry_map.size() << endl;
     for(map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.begin();
@@ -304,16 +318,20 @@ void TriageReplHawkeye::choose_optgen()
 
 uint32_t TriageReplHawkeye::get_assoc()
 {
-    switch (dynamic_optgen_choice) {
-        case 0:
-            return 4;
-        case 1:
-            return 8;
-        case 2:
-            return 0;
-        default:
-            // This can't happen
-            assert(0);
+    if (use_dynamic) {
+        switch (dynamic_optgen_choice) {
+            case 0:
+                return 4;
+            case 1:
+                return 8;
+            case 2:
+                return 0;
+            default:
+                // This can't happen
+                assert(0);
+        }
+    } else {
+        return assoc;
     }
 }
 

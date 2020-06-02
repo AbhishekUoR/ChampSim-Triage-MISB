@@ -70,7 +70,7 @@ void TriageOnchip::set_conf(uint64_t cpu, TriageConfig *config)
     use_reeses = config->use_reeses;
 
     entry_list.resize(num_sets);
-    repl = TriageRepl::create_repl(&entry_list, repl_type, assoc, use_dynamic_assoc);
+    repl = TriageRepl::create_repl(&entry_list, repl_type, assoc, use_dynamic_assoc, this);
     cout << "Num Sets: " << num_sets << endl;
 }
 
