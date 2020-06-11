@@ -44,9 +44,9 @@ class Experiment:
             os.mkdir(self.expr_dir + "/scripts")
         condor_script_path = "{0}/scripts/{1}.condor".format(self.expr_dir,
                 trace[0])
-        command = "{0} -warmup_instructions {1} -simulation_instructions {2} -hide_heartbeat -traces {3} >& {5}/{4}.stats".format(
+        command = "{0} -warmup_instructions {1} -simulation_instructions {2} {6} -hide_heartbeat -traces {3} >& {5}/{4}.stats".format(
             self.binary_path, self.warmup_insns, self.simulation_insns,
-            trace[1], trace[0], self.expr_dir)
+            trace[1], trace[0], self.expr_dir, "-low_bandwidth" if self.low_bandwidth else "")
         subprocess.call(['condor_shell',
 #            '--silent',
             '--log',
@@ -68,6 +68,7 @@ class Experiment:
         self.simulation_insns = desc.simulation_insns
         self.trace_dir = desc.trace_dir
         self.binary_path = desc.champsim_dir + "/bin/" + self.binary
+        self.low_bandwidth = desc.low_bandwidth
         self.expr_dir = output_dir + "/" + self.name
         if not os.path.exists(self.expr_dir):
             os.mkdir(self.expr_dir)

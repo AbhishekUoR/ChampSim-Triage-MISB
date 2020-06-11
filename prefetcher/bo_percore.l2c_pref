@@ -1,7 +1,7 @@
 #include "bo_percore.h" 
 #include <stdint.h>
 
-#define DEGREE 8
+#define DEGREE 1
 
 #define PF_CROSS_PAGE false
 

@@ -18,6 +18,7 @@ class Descriptor:
         self.weights_file = self.json_object['weights_file']
         self.multicore = self.json_object.get('multicore', False)
         self.simulation_insns = self.json_object['simulation_insns']
+        self.low_bandwidth = self.json_object.get('lowbandwidth', False)
         self.experiments = [Experiment(exp) for exp in
                 self.json_object['experiments']]
 

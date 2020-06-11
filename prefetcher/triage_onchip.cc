@@ -146,14 +146,27 @@ int TriageOnchip::decrease_confidence(uint64_t addr)
 
 void TriageOnchip::calculate_assoc()
 {
-    if (use_dynamic_assoc) {
-        assoc = repl->get_assoc();
-    } else if (use_rap_assoc) {
+    if (use_rap_assoc) {
         assoc = rap->get_best_assoc(cpu);
     } else if (use_sba_assoc) {
         uint32_t unique_trigger_count = unique_triggers.size();
 //        if (unique_trigger_count > assoc*num_sets)
-        assoc = min(unique_trigger_count/num_sets+2, max_assoc);
+        uint32_t sba_assoc = min(unique_trigger_count/num_sets+2, max_assoc);
+        if (use_dynamic_assoc) {
+            uint32_t dyn_assoc = repl->get_assoc();
+            assoc = max(sba_assoc, dyn_assoc);
+            /*if (dyn_assoc == 8) {
+                assoc = dyn_assoc;
+            } else if (dyn_assoc == 4) {
+                assoc = max(dyn_assoc, sba_assoc);
+            } else {
+                assoc = sba_assoc;
+            }*/
+        } else {
+            assoc = sba_assoc;
+        }
+    } else if (use_dynamic_assoc) {
+        assoc = repl->get_assoc();
     }
 }
 

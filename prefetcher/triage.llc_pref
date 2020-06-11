@@ -27,7 +27,7 @@ void CACHE::llc_prefetcher_initialize()
     for (int c = 0; c < NUM_CPUS; ++c) {
         conf[c].lookahead = 1;
         conf[c].degree = 1;
-        conf[cpu].prefetch_queue_degree = conf[cpu].degree;
+        conf[c].prefetch_queue_degree = conf[c].degree;
         conf[c].on_chip_set = 32768;
         conf[c].on_chip_assoc = 8;
 //        conf[c].on_chip_set = 16384;
@@ -35,11 +35,11 @@ void CACHE::llc_prefetcher_initialize()
         conf[c].training_unit_size = 10000000;
         conf[c].repl = TRIAGE_REPL_HAWKEYE;
     //    conf[c].repl = TRIAGE_REPL_PERFECT;
-        conf[c].use_dynamic_assoc = false;
+        conf[c].use_dynamic_assoc = true;
         conf[c].use_rap_assoc = false;
         conf[c].use_sba_assoc = true;
         conf[c].use_compressed_tag = false;
-        conf[c].use_reeses = true;
+        conf[c].use_reeses = false;
         conf[c].use_layer_prediction = false;
         conf[c].reeses_footprint = false;
         conf[c].reeses_perfect_trigger = false;
