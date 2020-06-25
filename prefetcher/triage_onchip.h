@@ -13,7 +13,7 @@
 #define ONCHIP_LINE_SHIFT 0
 // This value is used for compressed tag in Triage to indicate the amount of
 // allowed bits for Triage's tag value.
-#define ONCHIP_TAG_BITS 11
+#define ONCHIP_TAG_BITS 4
 
 #define INVALID_ADDR 0xdeadbeef
 

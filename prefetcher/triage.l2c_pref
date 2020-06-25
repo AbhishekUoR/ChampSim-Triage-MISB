@@ -27,7 +27,7 @@ void CACHE::l2c_prefetcher_initialize()
 {
     cout << NUM_CPUS << endl;
     conf[cpu].lookahead = 1;
-    conf[cpu].degree = 1;
+    conf[cpu].degree = 16;
     conf[cpu].prefetch_queue_degree = conf[cpu].degree;
     conf[cpu].on_chip_set = 32768;
     conf[cpu].on_chip_assoc = 8;
@@ -36,18 +36,18 @@ void CACHE::l2c_prefetcher_initialize()
 //    conf[cpu].repl = TRIAGE_REPL_PERFECT;
     conf[cpu].use_dynamic_assoc = true;
     conf[cpu].use_rap_assoc = false;
-    conf[cpu].use_sba_assoc = false;
-    conf[cpu].use_compressed_tag = false;
+    conf[cpu].use_sba_assoc = true;
+    conf[cpu].use_compressed_tag = true;
     conf[cpu].use_reeses = true;
-    conf[cpu].use_layer_prediction = false;
+    conf[cpu].use_layer_prediction = true;
     conf[cpu].reeses_footprint = false;
     conf[cpu].reeses_perfect_trigger = false;
-    int assoc_config = ASSOC_CONFIG;
-    int assoc = (assoc_config>>cpu) & 1;
+//    int assoc_config = ASSOC_CONFIG;
+//    int assoc = (assoc_config>>cpu) & 1;
 //    if (!assoc)
 //        conf[cpu].on_chip_assoc = 0;
     conf[cpu].log_on_chip_set = 15;
-    std::cout << "ASSOC_CONFIG: " << ASSOC_CONFIG << std::endl;
+//    std::cout << "ASSOC_CONFIG: " << ASSOC_CONFIG << std::endl;
     std::cout << "CPU " << cpu << " assoc: " << conf[cpu].on_chip_assoc << std::endl;
 
     if (conf[cpu].use_reeses)

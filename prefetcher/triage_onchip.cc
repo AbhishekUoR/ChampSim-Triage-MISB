@@ -84,17 +84,20 @@ uint64_t TriageOnchip::get_line_offset(uint64_t addr)
 uint64_t TriageOnchip::get_set_id(uint64_t addr)
 {
     uint64_t set_id;
-#ifdef USE_OLD_SETID
     if (use_reeses) {
-        set_id = (addr>>LOG2_REGION_SIZE>>ONCHIP_LINE_SHIFT) & index_mask;
+    //    set_id = hash<uint64_t>{}(addr>>ONCHIP_LINE_SHIFT);
+        set_id = 0;
+        addr = addr>>ONCHIP_LINE_SHIFT;
+        while (addr > 0) {
+            set_id = set_id ^ (addr & index_mask);
+            addr >>= log_num_sets;
+        }
+        debug_cout << hex << "addr: " << addr << ", num_sets: " << num_sets << ", index_mask: " << index_mask
+            << ", set_id: " << set_id <<endl;
+        set_id = set_id & index_mask;
     } else {
         set_id = (addr>>ONCHIP_LINE_SHIFT) & index_mask;
     }
-#else
-    set_id = hash<uint64_t>{}(addr>>ONCHIP_LINE_SHIFT) % uint64_t(num_sets);
-#endif
-    debug_cout << "num_sets: " << num_sets << ", index_mask: " << index_mask
-        << ", set_id: " << set_id <<endl;
     assert(set_id < num_sets);
     return set_id;
 }
@@ -151,7 +154,7 @@ void TriageOnchip::calculate_assoc()
     } else if (use_sba_assoc) {
         uint32_t unique_trigger_count = unique_triggers.size();
 //        if (unique_trigger_count > assoc*num_sets)
-        uint32_t sba_assoc = min(unique_trigger_count/num_sets+2, max_assoc);
+        uint32_t sba_assoc = min(unique_trigger_count/num_sets+1, max_assoc);
         if (use_dynamic_assoc) {
             uint32_t dyn_assoc = repl->get_assoc();
             assoc = max(sba_assoc, dyn_assoc);
