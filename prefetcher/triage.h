@@ -11,10 +11,16 @@
 
 
 struct TriageConfig {
+    // The lookahead of Triage. XXX: Not implemented for lookead > 1
     int lookahead;
+    // The degree of Triage. XXX: Must set use_layer_prediction=true for
+    // degree>1
     int degree;
+    // Degree of prefetch from prefetch queue for each access. Should be set to equivalent to
+    // degree.
     int prefetch_queue_degree;
 
+    //
     int on_chip_set, on_chip_assoc, log_on_chip_set;
     int training_unit_size;
     bool use_dynamic_assoc;

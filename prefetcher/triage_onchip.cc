@@ -184,7 +184,7 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
     map<uint64_t, TriageOnchipEntry>::iterator it = entry_map.find(tag);
 
     if (it!=entry_map.end()) {
-        assert(unique_triggers.count(prev_addr));
+        assert(unique_triggers.count(tag));
         ++metadata_hit;
 //        cout << "0 " << current_core_cycle[0] << endl;
     debug_cout << hex << "HIT update prev_addr: " << prev_addr
@@ -196,7 +196,7 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
         << ", pc: " << pc
         << endl;
     } else {
-        if (unique_triggers.count(prev_addr)) {
+        if (unique_triggers.count(tag)) {
             ++metadata_capacity_miss;
 //            cout << "1 " << current_core_cycle[0] << endl;
     debug_cout << hex << "CAPACITYMISS update prev_addr: " << prev_addr
@@ -220,7 +220,7 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
         << endl;
         }
     }
-    unique_triggers.insert(prev_addr);
+    unique_triggers.insert(tag);
     if (it != entry_map.end()) {
         while (repl_type != TRIAGE_REPL_PERFECT && entry_map.size() > assoc && entry_map.size() > 0) {
             uint64_t victim_addr = repl->pickVictim(set_id);
