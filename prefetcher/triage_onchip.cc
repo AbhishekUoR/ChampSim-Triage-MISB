@@ -10,6 +10,7 @@
 using namespace std;
 
 //#define USE_OLD_SETID
+//#define USE_PERFECT_SBA
 
 //#define DEBUG
 
@@ -68,7 +69,13 @@ void TriageOnchip::set_conf(uint64_t cpu, TriageConfig *config)
     assert(!(use_dynamic_assoc&&use_rap_assoc));
     use_compressed_tag = config->use_compressed_tag;
     use_reeses = config->use_reeses;
+    unique_trigger_count = 0;
 
+    if (use_sba_assoc) {
+        trigger_filters = new bf::basic_bloom_filter(config->bloom_fprate, config->bloom_capacity);
+    } else {
+        trigger_filters = nullptr;
+    }
     entry_list.resize(num_sets);
     repl = TriageRepl::create_repl(&entry_list, repl_type, assoc, use_dynamic_assoc, this);
     cout << "Num Sets: " << num_sets << endl;
@@ -152,9 +159,14 @@ void TriageOnchip::calculate_assoc()
     if (use_rap_assoc) {
         assoc = rap->get_best_assoc(cpu);
     } else if (use_sba_assoc) {
+#ifdef USE_PERFECT_SBA
         uint32_t unique_trigger_count = unique_triggers.size();
+#endif
 //        if (unique_trigger_count > assoc*num_sets)
         uint32_t sba_assoc = min(unique_trigger_count/num_sets+1, max_assoc);
+        debug_cout << "In calculate_assoc: unique_trigger_count = " << unique_trigger_count
+            << ", absolute: " << unique_triggers.size() << endl;
+
         if (use_dynamic_assoc) {
             uint32_t dyn_assoc = repl->get_assoc();
             assoc = max(sba_assoc, dyn_assoc);
@@ -171,6 +183,7 @@ void TriageOnchip::calculate_assoc()
     } else if (use_dynamic_assoc) {
         assoc = repl->get_assoc();
     }
+//    cout << "A " << assoc << endl;
 }
 
 void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl, TUEntry* reeses_entry)
@@ -221,6 +234,14 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
         }
     }
     unique_triggers.insert(tag);
+    //Check Bloom filter for SBA:
+    if (trigger_filters->lookup(tag)) {
+        debug_cout << "Exist in Bloom: " << tag << endl;
+    } else {
+        debug_cout << "Add to Bloom: " << tag << endl;
+        ++unique_trigger_count;
+        trigger_filters->add(tag);
+    }
     if (it != entry_map.end()) {
         while (repl_type != TRIAGE_REPL_PERFECT && entry_map.size() > assoc && entry_map.size() > 0) {
             uint64_t victim_addr = repl->pickVictim(set_id);
@@ -329,6 +350,7 @@ void TriageOnchip::print_stats()
     }
     cout << "OnChipEntrySize=" << entry_size << endl;
     cout << "UniqueTriggerSizze=" << unique_triggers.size() << endl;
+    cout << "BloomUniqueTriggerSizze=" << unique_trigger_count << endl;
     cout << "MetadataHits=" << metadata_hit << endl;
     cout << "MetadataCompulsoryMiss=" << metadata_compulsory_miss << endl;
     cout << "MetadataCapacityMiss==" << metadata_capacity_miss << endl;

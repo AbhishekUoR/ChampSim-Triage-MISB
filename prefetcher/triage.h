@@ -33,6 +33,10 @@ struct TriageConfig {
     bool regular_on_compulsory;
     bool reeses_perfect_trigger;
 
+    double bloom_fprate;
+    int bloom_capacity;
+
+
     TriageReplType repl;
 };
 

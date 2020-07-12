@@ -1,6 +1,7 @@
 #ifndef __TRIAGE_ONCHIP_H__
 #define __TRIAGE_ONCHIP_H__
 
+#include <bf/all.hpp>
 #include <vector>
 #include <map>
 #include <unordered_set>
@@ -137,6 +138,8 @@ class TriageOnchip {
     RAH* rap;
 
     std::unordered_set<uint64_t> unique_triggers;
+    bf::bloom_filter *trigger_filters;
+    int unique_trigger_count;
 
     public:
         TriageOnchip();
