@@ -34,11 +34,11 @@ void CACHE::l2c_prefetcher_initialize()
     conf[cpu].training_unit_size = 10000000;
     conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
 //    conf[cpu].repl = TRIAGE_REPL_PERFECT;
-    conf[cpu].use_dynamic_assoc = true;
+    conf[cpu].use_dynamic_assoc = false;
     conf[cpu].use_rap_assoc = false;
-    conf[cpu].use_sba_assoc = false;
+    conf[cpu].use_sba_assoc = true;
     conf[cpu].bloom_fprate = 0.50;
-    conf[cpu].bloom_capacity = 100000;
+    conf[cpu].bloom_capacity = 500000;
     conf[cpu].use_compressed_tag = false;
     conf[cpu].use_reeses = true;
     conf[cpu].use_layer_prediction = false;

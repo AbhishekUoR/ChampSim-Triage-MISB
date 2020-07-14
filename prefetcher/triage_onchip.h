@@ -4,6 +4,7 @@
 #include <bf/all.hpp>
 #include <vector>
 #include <map>
+#include <random>
 #include <unordered_set>
 #include <stdint.h>
 #include "optgen_simple.h"
@@ -139,7 +140,14 @@ class TriageOnchip {
 
     std::unordered_set<uint64_t> unique_triggers;
     bf::bloom_filter *trigger_filters;
+    unsigned trigger_filter_bits, bloom_capacity;
+    std::default_random_engine bloom_random;
+    std::uniform_real_distribution<double> bloom_dist;
+    double bloom_fprate;
     int unique_trigger_count;
+    int hash_count;
+
+    double calculate_fp_rate();
 
     public:
         TriageOnchip();

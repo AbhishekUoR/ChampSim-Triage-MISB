@@ -34,7 +34,7 @@ struct TriageConfig {
     bool reeses_perfect_trigger;
 
     double bloom_fprate;
-    int bloom_capacity;
+    unsigned bloom_capacity;
 
 
     TriageReplType repl;

@@ -1,6 +1,7 @@
 
 #include <assert.h>
 #include <algorithm>
+#include <cmath>
 #include <functional>
 
 #include "rap.h"
@@ -72,7 +73,14 @@ void TriageOnchip::set_conf(uint64_t cpu, TriageConfig *config)
     unique_trigger_count = 0;
 
     if (use_sba_assoc) {
-        trigger_filters = new bf::basic_bloom_filter(config->bloom_fprate, config->bloom_capacity);
+        bloom_fprate = config->bloom_fprate;
+        bloom_capacity = config->bloom_capacity;
+        trigger_filter_bits = bf::basic_bloom_filter::m(bloom_fprate, bloom_capacity);
+        hash_count = bf::basic_bloom_filter::k(trigger_filter_bits, bloom_capacity);
+        cout << "BLOOM n=" << bloom_capacity << ", p=" << bloom_fprate
+            << ", m=" << trigger_filter_bits << ", k=" << hash_count
+            << endl;
+        trigger_filters = new bf::basic_bloom_filter(bloom_fprate, bloom_capacity, 0, false);
     } else {
         trigger_filters = nullptr;
     }
@@ -186,6 +194,16 @@ void TriageOnchip::calculate_assoc()
 //    cout << "A " << assoc << endl;
 }
 
+double TriageOnchip::calculate_fp_rate()
+{
+    //p=pow(1-exp(-kn/m), k)
+    // k = hash_count, m = trigger_filter_bits, n = unique_trigger_count;
+    debug_cout << "k="<< hash_count << ", m=" << trigger_filter_bits << ", n=" << unique_trigger_count << endl;
+    double p = 1 - exp(-double(hash_count * unique_trigger_count) / trigger_filter_bits);
+    p = pow(p, hash_count);
+    return p;
+}
+
 void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, bool update_repl, TUEntry* reeses_entry)
 {
     calculate_assoc();
@@ -239,7 +257,15 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
     if (use_sba_assoc) {
         assert(trigger_filters != nullptr);
         if (trigger_filters->lookup(tag)) {
-            debug_cout << "Exist in Bloom: " << tag << endl;
+            // Add unique_trigger_count for false positive rate;
+            double current_fprate = calculate_fp_rate();
+            double rand_value = bloom_dist(bloom_random);
+            debug_cout << "Exist in Bloom: " << tag << ", current_fprate: " << current_fprate << ", rand_value" << rand_value 
+                <<", trigger_filter_bits: " << trigger_filter_bits << endl;
+            if (rand_value < current_fprate) {
+                debug_cout << "Add to unique_trigger_count due to possible false positive" << endl;
+                ++unique_trigger_count;
+            }
         } else {
             debug_cout << "Add to Bloom: " << tag << endl;
             ++unique_trigger_count;
