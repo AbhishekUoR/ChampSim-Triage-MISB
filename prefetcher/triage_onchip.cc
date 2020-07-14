@@ -235,12 +235,16 @@ void TriageOnchip::update(uint64_t prev_addr, uint64_t next_addr, uint64_t pc, b
     }
     unique_triggers.insert(tag);
     //Check Bloom filter for SBA:
-    if (trigger_filters->lookup(tag)) {
-        debug_cout << "Exist in Bloom: " << tag << endl;
-    } else {
-        debug_cout << "Add to Bloom: " << tag << endl;
-        ++unique_trigger_count;
-        trigger_filters->add(tag);
+    //
+    if (use_sba_assoc) {
+        assert(trigger_filters != nullptr);
+        if (trigger_filters->lookup(tag)) {
+            debug_cout << "Exist in Bloom: " << tag << endl;
+        } else {
+            debug_cout << "Add to Bloom: " << tag << endl;
+            ++unique_trigger_count;
+            trigger_filters->add(tag);
+        }
     }
     if (it != entry_map.end()) {
         while (repl_type != TRIAGE_REPL_PERFECT && entry_map.size() > assoc && entry_map.size() > 0) {

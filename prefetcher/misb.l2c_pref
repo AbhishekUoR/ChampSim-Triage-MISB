@@ -13,7 +13,7 @@ uint64_t llc_hit_prefetch_count = 0;
 
 //#define HYBRID
 //#define TRAIN_ON_NON_BO
-#define DEGREE 2
+#define DEGREE 1
 #define MAX_ALLOWED_DEGREE 8
 
 #define ISB_FILL_LEVEL FILL_L2

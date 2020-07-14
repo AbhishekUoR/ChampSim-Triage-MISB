@@ -8,7 +8,7 @@ inc = inc
 
 debug = 0
 
-CFlags = $(CFLAGS) -Wall -O3 -std=c++11 -g
+CFlags = $(CFLAGS) -Wall -O3 -std=c++11
 LDFlags = -lboost_serialization -lbf
 libs =
 libDir =
