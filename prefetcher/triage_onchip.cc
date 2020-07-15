@@ -11,7 +11,7 @@
 using namespace std;
 
 //#define USE_OLD_SETID
-//#define USE_PERFECT_SBA
+#define USE_PERFECT_SBA
 
 //#define DEBUG
 

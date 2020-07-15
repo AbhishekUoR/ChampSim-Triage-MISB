@@ -17,7 +17,7 @@ count=`ls -lh $baseline/*.txt | wc -l`
 echo $count
 
 dir=$(dirname "$0")
-for i in `seq 1 50`;
+for i in `seq 1 30`;
 do
     baseline_file="$baseline/mix""$i.txt"
     dut_file="$dut/mix""$i.txt"

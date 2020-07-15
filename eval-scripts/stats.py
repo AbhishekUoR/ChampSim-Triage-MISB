@@ -53,7 +53,7 @@ class Stat:
                 if res != None:
                     stat['triage_onchip_entry_size'] = int(res.group(1))
 
-                res = re.match('UniqueTriggerSize=(\d+)', line)
+                res = re.match('UniqueTriggerSizze=(\d+)', line)
                 if res != None:
                     stat['triage_unique_trigger_size'] = int(res.group(1))
 
