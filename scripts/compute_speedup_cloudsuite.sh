@@ -6,13 +6,13 @@ then
 fi
 
 baseline=$1
-echo $baseline
+#echo $baseline
 dut=$2
-echo $dut
+echo -n `basename $dut`' ' 
 
 speedup_average=1.0
 count=`ls -lh /scratch/cluster/akanksha/CloudSuiteTraces/*core0.trace.gz | wc -l`
-echo $count
+#echo $count
 
 dir=$(dirname "$0")
 
@@ -28,8 +28,10 @@ do
 #    echo "$baseline_file $dut_file"
  
     speedup=`perl ${dir}/mc_speedup.pl $baseline_file $dut_file`
-    echo "$benchmark, $weight, $speedup"
+#    echo "$benchmark, $weight, $speedup"
+    echo -n "$speedup"
     speedup_average=`perl ${dir}/geomean.pl $speedup $speedup_average $count`
 done
+echo
 
-echo "Average: $speedup_average"
+#echo "Average: $speedup_average"

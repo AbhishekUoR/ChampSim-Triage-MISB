@@ -8,7 +8,7 @@ void CACHE::l2c_prefetcher_initialize() {
 // is called when a request is made to the next level memory
 uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
 {
-    sms_l2c_prefetcher_operate(addr, pc, cache_hit, type, this);
+    sms_l2c_prefetcher_operate(addr, pc, cache_hit, type, FILL_L2, this);
     return metadata_in;
 }
 

@@ -6,15 +6,15 @@ then
 fi
 
 baseline=$1
-echo $baseline
+#echo $baseline
 dut=$2
-echo $dut
+echo -n `basename $dut`' '
 sc_baseline=$3
-echo $sc_baseline
+#echo $sc_baseline
 
 average=1.0
 count=`ls -lh $baseline/*.txt | wc -l`
-echo $count
+#echo $count
 
 dir=$(dirname "$0")
 for i in `seq 1 30`;
@@ -59,8 +59,10 @@ do
 
     weighted_speedup=`echo "100*(($weighted_dut/$weighted_baseline)-1)" | bc -l`
     #echo "$i, $weighted_dut, $weighted_baseline, $weighted_speedup"
-    echo "$i, $weighted_speedup"
+    #echo "$i, $weighted_speedup"
+    echo -n "$weighted_speedup"' '
     average=`perl ${dir}/geomean.pl $weighted_speedup $average $count`
 done
+echo
 
-echo "Average: $average"
+#echo "Average: $average"

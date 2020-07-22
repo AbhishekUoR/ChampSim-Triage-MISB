@@ -8,8 +8,6 @@ our $dut_stats_file = shift;
 
 my $assoc = compute_assoc($dut_stats_file);
 
-chomp($dut_traffic);
-
 print "\n";
 
 sub compute_assoc

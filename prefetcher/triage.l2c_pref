@@ -33,10 +33,9 @@ void CACHE::l2c_prefetcher_initialize()
     conf[cpu].on_chip_assoc = 8;
     conf[cpu].training_unit_size = 10000000;
     conf[cpu].repl = TRIAGE_REPL_HAWKEYE;
-//    conf[cpu].repl = TRIAGE_REPL_PERFECT;
-    conf[cpu].use_dynamic_assoc = true;
+    conf[cpu].use_dynamic_assoc = false;
     conf[cpu].use_rap_assoc = false;
-    conf[cpu].use_sba_assoc = false;
+    conf[cpu].use_sba_assoc = true;
     conf[cpu].bloom_fprate = 0.50;
     conf[cpu].bloom_capacity = 10000;
     conf[cpu].use_compressed_tag = false;
@@ -66,15 +65,11 @@ void CACHE::l2c_prefetcher_initialize()
 
 uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache_hit, uint8_t type, uint64_t metadata_in)
 {
-    if (type != LOAD) {
-        return metadata_in;
-    }
-
-    //if (cache_hit) {
-    //    return metadata_in;
-    //}
-
     addr = (addr >> 6) << 6;
+    //cout << "OPERATE: " << hex << addr << ", pc=" << pc << ", cache_hit=" << unsigned(cache_hit) << ", type=" << unsigned(type) << ", metadata_in=" << metadata_in << endl;
+    //if (type == PREFETCH) {
+        //pc = TRIAGE_PREFETCH_PC;
+    //}
     if (conf[cpu].use_rap_assoc) {
 #ifdef RAH_SHARED_CACHE
         rah.add_access(addr, pc, 0, false);

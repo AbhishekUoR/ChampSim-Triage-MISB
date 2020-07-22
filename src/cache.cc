@@ -1453,8 +1453,10 @@ void CACHE::return_data(PACKET *packet)
     // sanity check
     if (mshr_index == -1) {
         cerr << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << packet->instr_id << " cannot find a matching entry!";
+        cerr << " cache_level: " << unsigned(cache_type) << " cache_cpu: " << cpu << " packet_cpu: " << packet->cpu;
         cerr << " full_addr: " << hex << packet->full_addr;
         cerr << " address: " << packet->address << dec;
+        cerr << " type: " << unsigned(packet->type) ;
         cerr << " event: " << packet->event_cycle << " current: " << current_core_cycle[packet->cpu] << endl;
         assert(0);
     }

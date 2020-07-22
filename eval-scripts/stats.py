@@ -175,13 +175,13 @@ class Stat:
         stat['coverage'] = 0.0
 #            stat['timeliness'] = 0.0
         try:
-#            stat['accuracy'] = float(stat['L2C_prefetch_useful'])/(float(stat['L2C_prefetch_useful'])
-#                    + float(stat['L2C_prefetch_useless']))
-#            stat['coverage'] = float(stat['L2C_prefetch_useful'])/float(stat['L2C_prefetch_useful']+stat['L2C_LOAD_miss']+stat['L2C_RFO_miss'])
+            stat['accuracy'] = float(stat['L2C_prefetch_useful'])/(float(stat['L2C_prefetch_useful'])
+                    + float(stat['L2C_prefetch_useless']))
+            stat['coverage'] = float(stat['L2C_prefetch_useful'])/float(stat['L2C_prefetch_useful']+stat['L2C_LOAD_miss']+stat['L2C_RFO_miss'])
 #            stat['timeliness'] = float(stat['LLC_prefetch_useful'])/float(stat['LLC_prefetch_late']+stat['LLC_prefetch_useful'])
-            stat['accuracy'] = float(stat['LLC_prefetch_useful'])/(float(stat['LLC_prefetch_useful'])
-                    + float(stat['LLC_prefetch_useless']))
-            stat['coverage'] = float(stat['LLC_prefetch_useful'])/float(stat['LLC_prefetch_useful']+stat['LLC_LOAD_miss'])
+#            stat['accuracy'] = float(stat['LLC_prefetch_useful'])/(float(stat['LLC_prefetch_useful'])
+#                    + float(stat['LLC_prefetch_useless']))
+#            stat['coverage'] = float(stat['LLC_prefetch_useful'])/float(stat['LLC_prefetch_useful']+stat['LLC_LOAD_miss'])
         except:
             None
 

@@ -9,6 +9,8 @@
 #include "triage_training_unit.h"
 #include "triage_onchip.h"
 
+// A special pc reserved for upper level prefetches
+#define TRIAGE_PREFETCH_PC 0xb2efedc4b2efedc4 // hexspeak: prefetch
 
 struct TriageConfig {
     // The lookahead of Triage. XXX: Not implemented for lookead > 1

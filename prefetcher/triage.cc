@@ -72,8 +72,6 @@ void TriageBase::calculatePrefetch(uint64_t pc, uint64_t addr,
 
     addr = addr >> 6;
     
-    if (pc == 0) return; //TODO: think on how to handle prefetches from lower level
-
     debug_cout << hex << "Trigger: pc: " << pc << ", addr: "
         << addr << dec << " " << cache_hit << endl;
 

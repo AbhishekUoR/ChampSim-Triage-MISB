@@ -15,9 +15,9 @@ uint64_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t pc, uint8_t cache
 //    cout << "CPU " << cpu << " L2C BO prefetcher Received: " <<
 //        addr << ' ' << pc << ' ' << cache_hit << ' ' << type << ' ' << metadata_in 
 //        << ' ' << cpu << endl;
-    assert(type == LOAD || type == RFO);
-    if (type != LOAD && type != RFO)
-        return metadata_in;
+//    assert(type == LOAD || type == RFO);
+//    if (type != LOAD && type != RFO)
+//        return metadata_in;
 
     uint64_t bo_trigger_addr = 0;
     uint64_t bo_target_offset = 0;

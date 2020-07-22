@@ -7,6 +7,7 @@
 #include "cache.h"
 #include "container.h"
 
+//#define DEBUG true
 #define DEBUG false
 #define DBCODE(x) do { if(DEBUG) {x} } while(0);
 
@@ -112,7 +113,7 @@ namespace SMS {
                 pattern_t new_pattern = updatePattern(0, a_offset);
                 //std::cout << "AGT " << address << " " << ip << std::endl;
                 agt_evicted = theAGT.insert(a_region_tag, AGT_entry(ip, a_offset, new_pattern));
-                DBCODE(std::cout << "(1)generation started: " << getRegionTag(address)  <<  std::endl;)
+                DBCODE(std::cout << "(1)generation started: " << hex<< getRegionTag(address)<<dec  <<  std::endl;)
                 STAT(NEW_AGT_ENTRIES)
                 newgen = true;
             } else {
@@ -120,14 +121,14 @@ namespace SMS {
                 pat = updatePattern(pat, a_offset);
                 agt_entry->second.pattern = pat;
                 STAT(AGT_UPDATES)
-                DBCODE(std::cout << "(1)generation updated: " << getRegionTag(address) << " pattern: " << agt_entry->second.pattern << std::endl;)
+                DBCODE(std::cout << "(1)generation updated: " <<  hex<<getRegionTag(address) << " pattern: " << agt_entry->second.pattern << dec << std::endl;)
             }
 
             if(agt_evicted.second.pattern) {
                 STAT(AGT_EVICTIONS)
                 if(thePHT.erase(agt_evicted.second.pc)) { 
                     STAT(PHT_ERASURES)
-                    DBCODE(std::cout << "(1)erased previous PHT entry:  " << agt_evicted.second.pc << std::endl;)
+                    DBCODE(std::cout << "(1)erased previous PHT entry:  " <<hex<< agt_evicted.second.pc<<dec << std::endl;)
                 }
                 if(agt_evicted.second.pattern & (agt_evicted.second.pattern - 1)) {
                     STAT(PHT_ENTRIES)
@@ -151,7 +152,7 @@ namespace SMS {
             // and move it to a PHT
             address_t region_tag = getRegionTag(address);
             int32_t region_offset = getOffset(address);
-            DBCODE(std::cout << "EVICTED: " << region_tag << std::endl;)
+            DBCODE(std::cout << "EVICTED: " <<hex<< region_tag<<dec << std::endl;)
             AGT::Item agt_evicted;
 
             AGT::Iter agt_ent = theAGT.find(region_tag);
@@ -171,10 +172,10 @@ namespace SMS {
             if((pat & (pat - 1)) != 0) { 
                 if(thePHT.erase(pc)){
                     STAT(PHT_ERASURES)
-                    DBCODE(std::cout << "erase previous PHT entry: " << pc << std::endl;)
+                    DBCODE(std::cout <<hex<< "erase previous PHT entry: " << pc<<dec << std::endl;)
                 }
                 STAT(PHT_ENTRIES)
-                DBCODE(std::cout << "generation ended: " << agt_evicted.first << " pattern: " << pat << std::endl;)
+                DBCODE(std::cout << "generation ended: "<<hex << agt_evicted.first << " pattern: " << pat <<dec << std::endl;)
                 PHT::Item pht_evicted = thePHT.insert(pc, entry);
                 
                 if(pht_evicted.second.pattern) {
@@ -200,10 +201,10 @@ void sms_l2c_prefetcher_initialize() {
 }
 
 // is called when a request is made to the next level memory
-void sms_l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, CACHE* cache) {
+void sms_l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, int fill_level, CACHE* cache) {
     for (int i = 0; i < DEGREE && !sms->buffer.empty(); i++) {
-        DBCODE(cout << "PREFETCHING: " << sms->buffer.front() << " pc: " << ip << " sim_cycle: " << current_core_cycle[0] << endl;)
-        cache->prefetch_line(ip, addr, sms->buffer.front(), FILL_LLC, 0);
+        DBCODE(cout << "PREFETCHING: " <<hex<< sms->buffer.front() << " pc: " << ip<<dec << " sim_cycle: " << current_core_cycle[0] << endl;)
+        cache->prefetch_line(ip, addr, sms->buffer.front(), fill_level, 0);
         sms->buffer.pop();
 
     }
@@ -213,7 +214,7 @@ void sms_l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, u
         sms->prefetchAddresses(addr, ip, pf_addrs);
 
         DBCODE(if(pf_addrs.size()) {
-           cout << "PREFETCHED: " << pf_addrs.size() << " pc: " << ip << endl;
+           cout << "PREFETCHED: "<<hex << pf_addrs.size() << " pc: " << ip << dec << endl;
         })
 
         total_prefetch_triggers++;
