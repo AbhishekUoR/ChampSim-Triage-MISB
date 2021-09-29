@@ -11,7 +11,7 @@ git clone https://github.com/ChampSim/ChampSim.git
 # Compile
 
 ChampSim takes five parameters: Branch predictor, L1D prefetcher, L2C prefetcher, LLC replacement policy, and the number of cores. 
-For example, `./build_champsim.sh bimodal no no lru 1` builds a single-core processor with bimodal branch predictor, no L1/L2 data prefetchers, and the baseline LRU replacement policy for the LLC.
+For example, `./build_champsim.sh bimodal no no no no lru 1` builds a single-core processor with bimodal branch predictor, no L1 instruction prefetcher, no L1/L2/LLC data prefetchers, and the baseline LRU replacement policy for the LLC.
 ```
 $ ./build_champsim.sh bimodal no no no no lru 1
 
